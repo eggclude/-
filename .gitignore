@@ -1,0 +1,57 @@
+# ===== Unreal Engine generated / build =====
+Binaries/
+DerivedDataCache/
+Intermediate/
+Saved/
+Build/
+
+# ===== Visual Studio / IDE =====
+.vs/
+.vscode/
+.idea/
+*.sln
+*.slnx
+*.VC.db
+*.VC.opendb
+*.opensdf
+*.sdf
+*.suo
+*.user
+*.tlog
+*.ipch
+
+# ===== Build artifacts / object files =====
+*.obj
+*.objdir
+*.pdb
+*.ilk
+*.lib
+*.exp
+*.map
+*.dll
+*.exe
+
+# ===== UHT generated =====
+*.generated.h
+
+# ===== Misc =====
+Thumbs.db
+Desktop.ini
+.DS_Store
+*.log
+
+# ===== UE generated map built-data (regenerable, large) =====
+*_BuiltData.uasset
+
+# ===== UE template content (keep only your Content/0_; these stay local, not uploaded) =====
+Content/__ExternalActors__/
+Content/__ExternalObjects__/
+Content/Characters/
+Content/Cursor/
+Content/LevelPrototyping/
+Content/Locations/
+Content/LowpolyStyle/
+Content/PolygonFarm/
+Content/TopDown/
+Content/Variant_Strategy/
+Content/Variant_TwinStick/
