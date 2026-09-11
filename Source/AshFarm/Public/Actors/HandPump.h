@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -19,6 +19,7 @@ namespace HandPump
 	
 	static constexpr float MIN_WATER_FOR_PERAIR						= 10.0f;		//默认最小修复水量
 	static constexpr float PEPAIR_RESTORE_PERCENT					= 0.8f;			//修复耐久度占比
+	static constexpr int32 PEP_AIR_ATTEMPTS							= 20;			//修复次数限制
 }
 
 
@@ -76,7 +77,10 @@ public:
 
 	#pragma endregion
 	
-	#pragma region 手压并状态
+	#pragma region 手压井状态
+	//修复次数限制
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="手压井状态",meta=(DisplayName="修复次数限制",ClampMin = "0"))
+	int32 RepairAttempts = HandPump::PEP_AIR_ATTEMPTS;
 	
 	//手压井是否正在泵水
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="水箱状态",meta=(DisplayName="是否在泵水"))
@@ -121,7 +125,7 @@ public:
 	
 	//修复手压井
 	UFUNCTION(BlueprintCallable,Category="手压井功能",meta=(DisplayName="修复"))
-	void Repair();
+	bool Repair();
 	
 	//检查测试是否需要修复
 	UFUNCTION(CallInEditor,Category="手压井状态",meta=(DisplayName="检查测试是否需要修复"))
