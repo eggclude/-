@@ -67,23 +67,29 @@ float AHandPump::TakeWater(float WaterAmount)
 	{
 		UE_LOG(LogTemp,Warning,TEXT("手压井ID: %s,设备坏了,不能取水"),*DeviceID.ToString());
 		return 0.0f;
-	}
-	//4.当前水位为0（CurrentWater == 0.0f）
-	if (CurrentWater == 0.0f)
+	} 
+	//可用取水量 = 当前水位 - 保底最低水位
+	float AvailavleWater = CurrentWater - HandPump::MIN_WATER_FOR_REPAIR;
+	
+	//4.水箱已经到最小水位（CurrentWater <= MIN_WATER_FOR_REPAIR）
+	if (AvailavleWater <= 0)
 	{
-		UE_LOG(LogTemp,Warning,TEXT("手压井ID: %s,当前水位为0,不能取水"),*DeviceID.ToString());
+		UE_LOG(LogTemp,Warning,TEXT("手压井ID: %s,当前水位为%.2f,不能取水"),*DeviceID.ToString(),CurrentWater);
 		return 0.0f;
 	}
 	//3.水位不足（CurrentWater < WaterAmount）
-	float FinalWaterAmount = FMath::Min(CurrentWater,WaterAmount);
+	float FinalWaterAmount = FMath::Min(AvailavleWater,WaterAmount);
 	CurrentWater -= FinalWaterAmount;
 	
 	UE_LOG(LogTemp,Warning,TEXT("手压井ID:%s,取水请求%.2f,实际取水%.2f"),*DeviceID.ToString(),WaterAmount,FinalWaterAmount);
 	
+	//复位空转次数
+	DryRunCount = 0;
+	
 	//同时打印到屏幕
 	GEngine->AddOnScreenDebugMessage(-1,5.0F,FColor::Green, FString::Printf(TEXT("手压井ID:%s,取水请求%.2f,实际取水%.2f"),*DeviceID.ToString(),WaterAmount,FinalWaterAmount));
 	 
-	return WaterAmount;
+	return FinalWaterAmount;
 	
 }
 
@@ -103,13 +109,15 @@ float AHandPump::PumpWater()
 		//检查手压井是否低于危险阈值
 		if (Durabiliity <= DurabiliityCriticalThreshold)
 		{
-			UE_LOG(LogTemp,Warning,TEXT("手压井ID: %s,目前耐久度:%2f,已低于危险阈值%f"),*DeviceID.ToString(),Durabiliity,DurabiliityCriticalThreshold);
+			UE_LOG(LogTemp,Warning,TEXT("手压井ID: %s,目前耐久度:%.2f,已低于危险阈值%.2f"),*DeviceID.ToString(),Durabiliity,DurabiliityCriticalThreshold);
 		}
 		if (Durabiliity <= 0.0F)
 		{
-			UE_LOG(LogTemp,Warning,TEXT("手压井ID: %s,目前耐久度:%2f,已损坏"),*DeviceID.ToString(),Durabiliity);
+			UE_LOG(LogTemp,Warning,TEXT("手压井ID: %s,目前耐久度:%.2f,已损坏"),*DeviceID.ToString(),Durabiliity);
 			bIsBroken = true;
 		}
+		//记录泵水的次数
+		 PumpCount++;
 		
 		
 		//Tchar* : 字符串指针, *DeviceID.ToString() : 字符串指针, CurrentWater : 指向一个TCHAR类型的变量
@@ -119,9 +127,25 @@ float AHandPump::PumpWater()
 	}
 	else
 	{
+		//记录空转次数
+		DryRunCount++;
+		if (DryRunCount >=3)
+		{ 
+			//快爆炸了
+			UE_LOG(LogTemp,Warning,TEXT("手压井ID: %s,别再压了,手柄快断了"),*DeviceID.ToString());
+		}
+		FString Reason = TEXT("");
+		if (bIsBroken)
+		{	
+			Reason = TEXT("设备坏了,不能泵水,需要修复");
+			}
+			GEngine->AddOnScreenDebugMessage(-1,5.0F,FColor::Red,FString::Printf(	TEXT("手压井ID:%s,泵水失败:%s,空载次数：%d"),*DeviceID.ToString(),*Reason, DryRunCount));
+		
 		return 0.0f;
 	}
 }
+
+
 
 //获取当前水位占比
 float AHandPump::GetWaterPercentage() const
@@ -137,7 +161,7 @@ float AHandPump::GetWaterPercentage() const
 
 //获取当前耐久度占比
 float AHandPump::GetDurabiliityPercentage() const
-{
+	{
 	//检查最大耐久度是否为0
 	ensure(MaxDurability > 0.0f);
 	if (MaxDurability == 0.0f)
@@ -145,36 +169,58 @@ float AHandPump::GetDurabiliityPercentage() const
 		return 0.0f;
 	}
 	return Durabiliity/MaxDurability;
-}
+	}
 //修复手压井
-void AHandPump::Repair()
+bool AHandPump::Repair()
 {
-	if (bIsBroken)
+	
+	//检查手压井是否损坏
+	if (!bIsBroken)
 	{
-		//检查当前水位是否足够修复
-		if (CurrentWater >= HandPump::MIN_WATER_FOR_REPAIR)
-		{
-			//当前水位-最小水位保证水位不小于0
-			CurrentWater -= HandPump::MIN_WATER_FOR_REPAIR;
-			//当前水位=当前水位-保证水位不大于最大水位
-			CurrentWater = FMath::Clamp(CurrentWater,0.0f,MaxWater);
-			
-			//todo:需要耗材修复
-			
-			//修复耐久度
-			Durabiliity = MaxDurability * HandPump::PEPAIR_RESTORE_PERCENT;
-			
-			//bIsBroken 修复后设置为false，表示已修复
-			bIsBroken = false;
-			//输出修复成功信息
-			UE_LOG(LogTemp,Warning,TEXT("手压井ID: %s,已修复"),*DeviceID.ToString());
-		}
-		//当前水位不足修复
-		else
-		{
-			UE_LOG(LogTemp,Warning,TEXT("手压井ID: %s,当前水位:%2f,无法修复"),*DeviceID.ToString(),CurrentWater);
-		}
+		UE_LOG(LogTemp,Warning,TEXT("手压井ID: %s,未损坏,无需修复"),*DeviceID.ToString());
+		return false;
+	}
+	//检查修复次数是否用完
+	if (RepairAttempts <= 0)
+	{
+		UE_LOG(LogTemp,Warning,TEXT("手压井ID: %s,修复次数已用完"),*DeviceID.ToString());
+		return false;
 	}	
-}
-
-
+	//修复次数
+	RepairAttempts--;
+	//检查当前水位是否足够修复 （当前水位<=最小水位） MIN_WATER_FOR_PERAIR=10.0 
+	if (CurrentWater < HandPump::MIN_WATER_FOR_PERAIR)
+	{
+		UE_LOG(LogTemp,Warning,TEXT("手压井ID: %s,当前水位:%.2f,无法修复"),*DeviceID.ToString(),CurrentWater);
+		return false;
+	}
+	//检查当前水位是否足够修复 （当前水位>=最小水位） MIN_WATER_FOR_REPAIR=10.0 
+	if (CurrentWater <= HandPump::MIN_WATER_FOR_REPAIR)
+	{
+		UE_LOG(LogTemp,Warning,TEXT("手压井ID: %s,当前水位:%.2f,无法修复"),*DeviceID.ToString(),CurrentWater);
+		return false;
+	}
+	
+	
+	
+	//当前水位-最小水位保证水位不小于0
+	CurrentWater -= HandPump::MIN_WATER_FOR_REPAIR;
+	//当前水位=当前水位-保证水位不大于最大水位
+	CurrentWater = FMath::Clamp(CurrentWater,0.0f,MaxWater);
+	
+	//复位空转次数
+	DryRunCount = 0;
+	
+	
+	//todo:需要耗材修复
+			
+	//修复耐久度
+	Durabiliity = MaxDurability * HandPump::PEPAIR_RESTORE_PERCENT;
+			
+	//bIsBroken 修复后设置为false，表示已修复
+	bIsBroken = false;
+			
+	//输出修复成功信息
+	UE_LOG(LogTemp,Warning,TEXT("手压井ID: %s,已修复,修复剩余次数：%d，耐久度恢复到%.2f"),*DeviceID.ToString(),RepairAttempts,Durabiliity);
+	return true;
+	}

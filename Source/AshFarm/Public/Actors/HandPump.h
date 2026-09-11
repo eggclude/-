@@ -19,6 +19,7 @@ namespace HandPump
 	
 	static constexpr float MIN_WATER_FOR_PERAIR						= 10.0f;		//默认最小修复水量
 	static constexpr float PEPAIR_RESTORE_PERCENT					= 0.8f;			//修复耐久度占比
+	static constexpr int32 PEP_AIR_ATTEMPTS							= 20;			//修复次数限制
 }
 
 
@@ -40,7 +41,7 @@ public:
 	//检查手压井是否损坏
 	#pragma region 水位参数
 	//水箱当前水位
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "水位", meta = ( AllowPrivateAccess = "当前水位",ClampMin = "50", ClampMax = "500"))//最小水位50，最大水位500)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "水位", meta = ( AllowPrivateAccess = "当前水位",ClampMin = "0"))//最小水位0
 	float CurrentWater = HandPump::DEFAULT_CURR_ENT_WATER;
 	//水箱最大水量
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category = "水位", meta = ( AllowPrivateAccess = "当前水位" ,ClampMin = "50", ClampMax = "500"))//最小水位50，最大水位500))
@@ -76,7 +77,10 @@ public:
 
 	#pragma endregion
 	
-	#pragma region 手压并状态
+	#pragma region 手压井状态
+	//修复次数限制
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="手压井状态",meta=(DisplayName="修复次数限制",ClampMin = "0"))
+	int32 RepairAttempts = HandPump::PEP_AIR_ATTEMPTS;
 	
 	//手压井是否正在泵水
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="水箱状态",meta=(DisplayName="是否在泵水"))
@@ -107,6 +111,9 @@ public:
 	
 	#pragma region 功能函数区
 	
+
+	
+	
 	//取水 TakeWater()
 	UFUNCTION(BlueprintCallable,Category="手压井功能",meta=(DisplayName="取水"))
 	float TakeWater(float WaterAmount);
@@ -118,14 +125,26 @@ public:
 	
 	//修复手压井
 	UFUNCTION(BlueprintCallable,Category="手压井功能",meta=(DisplayName="修复"))
-	void Repair();
+	bool Repair();
 	
 	//检查测试是否需要修复
 	UFUNCTION(CallInEditor,Category="手压井状态",meta=(DisplayName="检查测试是否需要修复"))
 	void TestRepair(){Repair();}
 	
 	
+	
+	
+	
 	#pragma endregion
+	
+	#pragma region 统计和数据函数区
+	//记录泵水的次数
+	UPROPERTY(VisibleInstanceOnly,BlueprintReadOnly,Category="手压井状态",meta=(DisplayName="泵水次数"))
+	int32 PumpCount = 0; 
+	
+	//记录空转次数
+	UPROPERTY(VisibleInstanceOnly,BlueprintReadOnly,Category="手压井状态",meta=(DisplayName="空转次数"))
+	int32 DryRunCount = 0;
 	
 	//统计和数据函数
 	//获取当前水位占比
