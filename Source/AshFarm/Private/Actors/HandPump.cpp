@@ -31,6 +31,8 @@ void AHandPump::BeginPlay()
 	//检查最大水位和最大耐久度是否为0
 	ensure(MaxWater > 0.0f);
 	ensure(MaxDurability > 0.0f);
+	//Ensure Mesh组件存在
+	ensure(Mesh != nullptr);
 }
 
 
@@ -50,6 +52,41 @@ bool AHandPump::IsPumping() const
 {
 	return bIsPumping;
 }
+//取水 Takewater
+float AHandPump::TakeWater(float WaterAmount)
+{
+	//先检查以下几种情况
+	//1.请求不合理(WaterAmount <= 0.0f)
+	if (WaterAmount <= 0.0F)
+	{
+		UE_LOG(LogTemp,Warning,TEXT("手压井ID: %s,取水请求不合理"),*DeviceID.ToString());
+		return 0.0f;
+	}
+	//2.设备坏了（bIsBroken == true）
+	if (bIsBroken == true)
+	{
+		UE_LOG(LogTemp,Warning,TEXT("手压井ID: %s,设备坏了,不能取水"),*DeviceID.ToString());
+		return 0.0f;
+	}
+	//4.当前水位为0（CurrentWater == 0.0f）
+	if (CurrentWater == 0.0f)
+	{
+		UE_LOG(LogTemp,Warning,TEXT("手压井ID: %s,当前水位为0,不能取水"),*DeviceID.ToString());
+		return 0.0f;
+	}
+	//3.水位不足（CurrentWater < WaterAmount）
+	float FinalWaterAmount = FMath::Min(CurrentWater,WaterAmount);
+	CurrentWater -= FinalWaterAmount;
+	
+	UE_LOG(LogTemp,Warning,TEXT("手压井ID:%s,取水请求%.2f,实际取水%.2f"),*DeviceID.ToString(),WaterAmount,FinalWaterAmount);
+	
+	//同时打印到屏幕
+	GEngine->AddOnScreenDebugMessage(-1,5.0F,FColor::Green, FString::Printf(TEXT("手压井ID:%s,取水请求%.2f,实际取水%.2f"),*DeviceID.ToString(),WaterAmount,FinalWaterAmount));
+	 
+	return WaterAmount;
+	
+}
+
 //泵水 PumpWater
 float AHandPump::PumpWater()
 {	
@@ -59,10 +96,10 @@ float AHandPump::PumpWater()
 		
 		float lastWater = CurrentWater;
 		
-		CurrentWater = FMath::Clamp(CurrentWater + AddWaterPerpress,0.0F,MaxWater);
+		CurrentWater = FMath::Clamp(CurrentWater + AddWaterPerTime,0.0F,MaxWater);
 		
 		//耐久度损耗
-		Durabiliity = FMath::Clamp(Durabiliity - DurabiliityPumpLossPerPump,0.0F,MaxDurabiliity);
+		Durabiliity = FMath::Clamp(Durabiliity - DurabiliityPumpLossPerPump,0.0F,MaxDurability);
 		//检查手压井是否低于危险阈值
 		if (Durabiliity <= DurabiliityCriticalThreshold)
 		{
@@ -89,6 +126,8 @@ float AHandPump::PumpWater()
 //获取当前水位占比
 float AHandPump::GetWaterPercentage() const
 {
+	//检查最大水位是否为0
+	ensure(MaxWater > 0.0f);
 	if (MaxWater == 0.0f)
 	{
 		return 0.0f;
@@ -99,9 +138,43 @@ float AHandPump::GetWaterPercentage() const
 //获取当前耐久度占比
 float AHandPump::GetDurabiliityPercentage() const
 {
+	//检查最大耐久度是否为0
+	ensure(MaxDurability > 0.0f);
 	if (MaxDurability == 0.0f)
 	{
 		return 0.0f;
 	}
 	return Durabiliity/MaxDurability;
 }
+//修复手压井
+void AHandPump::Repair()
+{
+	if (bIsBroken)
+	{
+		//检查当前水位是否足够修复
+		if (CurrentWater >= HandPump::MIN_WATER_FOR_REPAIR)
+		{
+			//当前水位-最小水位保证水位不小于0
+			CurrentWater -= HandPump::MIN_WATER_FOR_REPAIR;
+			//当前水位=当前水位-保证水位不大于最大水位
+			CurrentWater = FMath::Clamp(CurrentWater,0.0f,MaxWater);
+			
+			//todo:需要耗材修复
+			
+			//修复耐久度
+			Durabiliity = MaxDurability * HandPump::PEPAIR_RESTORE_PERCENT;
+			
+			//bIsBroken 修复后设置为false，表示已修复
+			bIsBroken = false;
+			//输出修复成功信息
+			UE_LOG(LogTemp,Warning,TEXT("手压井ID: %s,已修复"),*DeviceID.ToString());
+		}
+		//当前水位不足修复
+		else
+		{
+			UE_LOG(LogTemp,Warning,TEXT("手压井ID: %s,当前水位:%2f,无法修复"),*DeviceID.ToString(),CurrentWater);
+		}
+	}	
+}
+
+

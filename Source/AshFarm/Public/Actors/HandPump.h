@@ -6,6 +6,22 @@
 #include "GameFramework/Actor.h"
 #include "HandPump.generated.h"
 
+namespace HandPump
+{
+	static constexpr float DEFAULT_CURR_ENT_WATER					= 10.0f;		//默认当前水位
+	static constexpr float MIN_WATER_FOR_REPAIR						= 10.0f;		//默认最小修复水量
+	static constexpr float DEFAULT_MAX_WATER						= 100.0f;		//默认最大水位
+	static constexpr float DEFAULT_MAX_ADD_WATER_PER_Time			= 10.0f;		//默认每次按下增加增加的水位
+	static constexpr float DEFAULT_DURABILITY_PERCENTAGE			= 1.0f;			//默认耐久度
+	static constexpr float DEFAULT_MAX_DURABILITY_PERCENTAGE		= 1.0f;			//默认最大耐久度
+	static constexpr float DEFAULT_DURABILITY_LOSS_PER_PUMP			= 0.2f;			//默认每次泵水损耗的耐久度
+	static constexpr float DEFAULT_MAX_ADD_DURABILITY_PERCENTAGE	= 10.0f;		//默认耐久度危险阈值
+	
+	static constexpr float MIN_WATER_FOR_PERAIR						= 10.0f;		//默认最小修复水量
+	static constexpr float PEPAIR_RESTORE_PERCENT					= 0.8f;			//修复耐久度占比
+}
+
+
 UCLASS()
 class ASHFARM_API AHandPump : public AActor
 {
@@ -16,34 +32,38 @@ public:
 	AHandPump();
 	//ClampMin = "50", ClampMax = "500" clap钳住 限制值 
 	
+	//constexpr 定义常量,效率最高,编译时候计算，不能在运行时修改
+	//constexpr 仅用于int,float,bool C++原生数据类型
+	//constexpr 不需要使用UPROPERTY，因为constexpr是编译时计算的，不能在运行时修改
+
 	
+	//检查手压井是否损坏
 	#pragma region 水位参数
 	//水箱当前水位
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "水位", meta = ( AllowPrivateAccess = "当前水位",ClampMin = "50", ClampMax = "500"))//最小水位50，最大水位500)
-	float CurrentWater = 10.0f;
+	float CurrentWater = HandPump::DEFAULT_CURR_ENT_WATER;
 	//水箱最大水量
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category = "水位", meta = ( AllowPrivateAccess = "当前水位" ,ClampMin = "50", ClampMax = "500"))//最小水位50，最大水位500))
-	float MaxWater = 50.0f;
+	float MaxWater = HandPump::DEFAULT_MAX_WATER;
 	//每次按下泵增加的水位
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="水箱状态",meta=(Displayname="每次按下增加的水位"))
-	float AddWaterPerpress = 10.0f;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="水位",meta=(Displayname="每次按下增加的水位"))
+	float AddWaterPerTime = HandPump::DEFAULT_MAX_ADD_WATER_PER_Time;
 	#pragma endregion 
 	
 	#pragma region 耐久度相关参数
-	
 	//耐久度
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="水箱状态",meta=(Displayname="耐久度"))
-	float Durabiliity = 100.0f;
+	float Durabiliity = HandPump::DEFAULT_DURABILITY_PERCENTAGE;
 	//最大耐久度
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="水箱状态",meta=(Displayname="最大耐久度",ClampMin = "50", ClampMax = "200"))
-	float MaxDurability = 100.0f;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="水箱状态",meta=(Displayname="最大耐久度",ClampMin = "0", ClampMax = "200"))
+	float MaxDurability = HandPump::DEFAULT_MAX_DURABILITY_PERCENTAGE;
 	//每次泵水损耗的耐久度
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="水箱状态",meta=(Displayname="每次泵水损耗的耐久度",ClampMin = "0.5", ClampMax = "10.0"))
-	float DurabiliityPumpLossPerPump = 10.0f;
+	float DurabiliityPumpLossPerPump = HandPump::DEFAULT_DURABILITY_LOSS_PER_PUMP;
 	
 	//耐久度危险阈值
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="水箱状态",meta=(Displayname="耐久度危险阈值",ClampMin = "0.5", ClampMax = "10.0"))
-	float DurabiliityCriticalThreshold = 10.0f;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="水箱状态",meta=(Displayname="耐久度危险阈值",ClampMin = "0", ClampMax = "10.0"))
+	float DurabiliityCriticalThreshold = HandPump::DEFAULT_MAX_ADD_DURABILITY_PERCENTAGE;
 	//Threshold 危险阈值
 	
 	//手压井是否损坏
@@ -51,12 +71,13 @@ public:
 	//当耐久度<=0时，手压井损坏 无法使用泵水
 	
 	//手压井是否损坏
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="水箱状态",meta=(Displayname="是否损坏"))
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="手压井功能",meta=(Displayname="是否损坏"))
 	bool bIsBroken = false;  //Ture :已损坏，false：未损坏
-	
+
 	#pragma endregion
 	
 	#pragma region 手压并状态
+	
 	//手压井是否正在泵水
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="水箱状态",meta=(DisplayName="是否在泵水"))
 	bool bIsPumping = false; //true ：正在蹦水，false：未泵水
@@ -85,13 +106,28 @@ public:
 	#pragma endregion
 	
 	#pragma region 功能函数区
+	
+	//取水 TakeWater()
+	UFUNCTION(BlueprintCallable,Category="手压井功能",meta=(DisplayName="取水"))
+	float TakeWater(float WaterAmount);
+	
+	
 	//泵水 PumpWater()
 	UFUNCTION(BlueprintCallable,Category="手压井功能",meta=(DisplayName="泵水"))
 	float PumpWater();
 	
+	//修复手压井
+	UFUNCTION(BlueprintCallable,Category="手压井功能",meta=(DisplayName="修复"))
+	void Repair();
+	
+	//检查测试是否需要修复
+	UFUNCTION(CallInEditor,Category="手压井状态",meta=(DisplayName="检查测试是否需要修复"))
+	void TestRepair(){Repair();}
+	
+	
+	#pragma endregion
+	
 	//统计和数据函数
-	
-	
 	//获取当前水位占比
 	UFUNCTION(BlueprintCallable,Category="手压井状态",meta=(DisplayName="获取水位百分比"))
 	float GetWaterPercentage() const;
@@ -99,9 +135,7 @@ public:
 	//获取当前耐久度占比
 	UFUNCTION(BlueprintCallable,Category="手压井状态",meta=(DisplayName="获取耐久度百分比"))
 	float GetDurabiliityPercentage() const;
-	
-	
-	
+
 	#pragma endregion
 	
 protected:
