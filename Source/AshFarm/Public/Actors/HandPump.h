@@ -133,6 +133,15 @@ public:
 	
 	#pragma endregion
 	
+	#pragma region 统计和数据函数区
+	//记录泵水的次数
+	UPROPERTY(VisibleInstanceOnly,BlueprintReadOnly,Category="手压井状态",meta=(DisplayName="泵水次数"))
+	int32 PumpCount = 0; 
+	
+	//记录空转次数
+	UPROPERTY(VisibleInstanceOnly,BlueprintReadOnly,Category="手压井状态",meta=(DisplayName="空转次数"))
+	int32 DryRunCount = 0;
+	
 	//统计和数据函数
 	//获取当前水位占比
 	UFUNCTION(BlueprintCallable,Category="手压井状态",meta=(DisplayName="获取水位百分比"))

@@ -83,6 +83,9 @@ float AHandPump::TakeWater(float WaterAmount)
 	
 	UE_LOG(LogTemp,Warning,TEXT("手压井ID:%s,取水请求%.2f,实际取水%.2f"),*DeviceID.ToString(),WaterAmount,FinalWaterAmount);
 	
+	//复位空转次数
+	DryRunCount = 0;
+	
 	//同时打印到屏幕
 	GEngine->AddOnScreenDebugMessage(-1,5.0F,FColor::Green, FString::Printf(TEXT("手压井ID:%s,取水请求%.2f,实际取水%.2f"),*DeviceID.ToString(),WaterAmount,FinalWaterAmount));
 	 
@@ -113,6 +116,8 @@ float AHandPump::PumpWater()
 			UE_LOG(LogTemp,Warning,TEXT("手压井ID: %s,目前耐久度:%.2f,已损坏"),*DeviceID.ToString(),Durabiliity);
 			bIsBroken = true;
 		}
+		//记录泵水的次数
+		 PumpCount++;
 		
 		
 		//Tchar* : 字符串指针, *DeviceID.ToString() : 字符串指针, CurrentWater : 指向一个TCHAR类型的变量
@@ -122,6 +127,20 @@ float AHandPump::PumpWater()
 	}
 	else
 	{
+		//记录空转次数
+		DryRunCount++;
+		if (DryRunCount >=3)
+		{ 
+			//快爆炸了
+			UE_LOG(LogTemp,Warning,TEXT("手压井ID: %s,别再压了,手柄快断了"),*DeviceID.ToString());
+		}
+		FString Reason = TEXT("");
+		if (bIsBroken)
+		{	
+			Reason = TEXT("设备坏了,不能泵水,需要修复");
+			}
+			GEngine->AddOnScreenDebugMessage(-1,5.0F,FColor::Red,FString::Printf(	TEXT("手压井ID:%s,泵水失败:%s,空载次数：%d"),*DeviceID.ToString(),*Reason, DryRunCount));
+		
 		return 0.0f;
 	}
 }
