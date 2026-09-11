@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "Actors/HandPump.h"
@@ -31,6 +31,8 @@ void AHandPump::BeginPlay()
 	//检查最大水位和最大耐久度是否为0
 	ensure(MaxWater > 0.0f);
 	ensure(MaxDurability > 0.0f);
+	//Ensure Mesh组件存在
+	ensure(Mesh != nullptr);
 }
 
 
@@ -50,6 +52,41 @@ bool AHandPump::IsPumping() const
 {
 	return bIsPumping;
 }
+//取水 Takewater
+float AHandPump::TakeWater(float WaterAmount)
+{
+	//先检查以下几种情况
+	//1.请求不合理(WaterAmount <= 0.0f)
+	if (WaterAmount <= 0.0F)
+	{
+		UE_LOG(LogTemp,Warning,TEXT("手压井ID: %s,取水请求不合理"),*DeviceID.ToString());
+		return 0.0f;
+	}
+	//2.设备坏了（bIsBroken == true）
+	if (bIsBroken == true)
+	{
+		UE_LOG(LogTemp,Warning,TEXT("手压井ID: %s,设备坏了,不能取水"),*DeviceID.ToString());
+		return 0.0f;
+	}
+	//4.当前水位为0（CurrentWater == 0.0f）
+	if (CurrentWater == 0.0f)
+	{
+		UE_LOG(LogTemp,Warning,TEXT("手压井ID: %s,当前水位为0,不能取水"),*DeviceID.ToString());
+		return 0.0f;
+	}
+	//3.水位不足（CurrentWater < WaterAmount）
+	float FinalWaterAmount = FMath::Min(CurrentWater,WaterAmount);
+	CurrentWater -= FinalWaterAmount;
+	
+	UE_LOG(LogTemp,Warning,TEXT("手压井ID:%s,取水请求%.2f,实际取水%.2f"),*DeviceID.ToString(),WaterAmount,FinalWaterAmount);
+	
+	//同时打印到屏幕
+	GEngine->AddOnScreenDebugMessage(-1,5.0F,FColor::Green, FString::Printf(TEXT("手压井ID:%s,取水请求%.2f,实际取水%.2f"),*DeviceID.ToString(),WaterAmount,FinalWaterAmount));
+	 
+	return WaterAmount;
+	
+}
+
 //泵水 PumpWater
 float AHandPump::PumpWater()
 {	
@@ -59,10 +96,10 @@ float AHandPump::PumpWater()
 		
 		float lastWater = CurrentWater;
 		
-		CurrentWater = FMath::Clamp(CurrentWater + AddWaterPerpress,0.0F,MaxWater);
+		CurrentWater = FMath::Clamp(CurrentWater + AddWaterPerTime,0.0F,MaxWater);
 		
 		//耐久度损耗
-		Durabiliity = FMath::Clamp(Durabiliity - DurabiliityPumpLossPerPump,0.0F,MaxDurabiliity);
+		Durabiliity = FMath::Clamp(Durabiliity - DurabiliityPumpLossPerPump,0.0F,MaxDurability);
 		//检查手压井是否低于危险阈值
 		if (Durabiliity <= DurabiliityCriticalThreshold)
 		{
@@ -89,6 +126,8 @@ float AHandPump::PumpWater()
 //获取当前水位占比
 float AHandPump::GetWaterPercentage() const
 {
+	//检查最大水位是否为0
+	ensure(MaxWater > 0.0f);
 	if (MaxWater == 0.0f)
 	{
 		return 0.0f;
@@ -99,6 +138,8 @@ float AHandPump::GetWaterPercentage() const
 //获取当前耐久度占比
 float AHandPump::GetDurabiliityPercentage() const
 {
+	//检查最大耐久度是否为0
+	ensure(MaxDurability > 0.0f);
 	if (MaxDurability == 0.0f)
 	{
 		return 0.0f;
