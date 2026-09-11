@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -40,7 +40,7 @@ public:
 	//检查手压井是否损坏
 	#pragma region 水位参数
 	//水箱当前水位
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "水位", meta = ( AllowPrivateAccess = "当前水位",ClampMin = "50", ClampMax = "500"))//最小水位50，最大水位500)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "水位", meta = ( AllowPrivateAccess = "当前水位",ClampMin = "0"))//最小水位0
 	float CurrentWater = HandPump::DEFAULT_CURR_ENT_WATER;
 	//水箱最大水量
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category = "水位", meta = ( AllowPrivateAccess = "当前水位" ,ClampMin = "50", ClampMax = "500"))//最小水位50，最大水位500))
@@ -107,6 +107,9 @@ public:
 	
 	#pragma region 功能函数区
 	
+
+	
+	
 	//取水 TakeWater()
 	UFUNCTION(BlueprintCallable,Category="手压井功能",meta=(DisplayName="取水"))
 	float TakeWater(float WaterAmount);
@@ -123,6 +126,9 @@ public:
 	//检查测试是否需要修复
 	UFUNCTION(CallInEditor,Category="手压井状态",meta=(DisplayName="检查测试是否需要修复"))
 	void TestRepair(){Repair();}
+	
+	
+	
 	
 	
 	#pragma endregion

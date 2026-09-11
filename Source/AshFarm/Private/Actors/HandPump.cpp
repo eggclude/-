@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "Actors/HandPump.h"
@@ -67,15 +67,18 @@ float AHandPump::TakeWater(float WaterAmount)
 	{
 		UE_LOG(LogTemp,Warning,TEXT("手压井ID: %s,设备坏了,不能取水"),*DeviceID.ToString());
 		return 0.0f;
-	}
-	//4.当前水位为0（CurrentWater == 0.0f）
-	if (CurrentWater == 0.0f)
+	} 
+	//可用取水量 = 当前水位 - 保底最低水位
+	float AvailavleWater = CurrentWater - HandPump::MIN_WATER_FOR_REPAIR;
+	
+	//4.水箱已经到最小水位（CurrentWater <= MIN_WATER_FOR_REPAIR）
+	if (AvailavleWater <= 0)
 	{
-		UE_LOG(LogTemp,Warning,TEXT("手压井ID: %s,当前水位为0,不能取水"),*DeviceID.ToString());
+		UE_LOG(LogTemp,Warning,TEXT("手压井ID: %s,当前水位为%.2f,不能取水"),*DeviceID.ToString(),CurrentWater);
 		return 0.0f;
 	}
 	//3.水位不足（CurrentWater < WaterAmount）
-	float FinalWaterAmount = FMath::Min(CurrentWater,WaterAmount);
+	float FinalWaterAmount = FMath::Min(AvailavleWater,WaterAmount);
 	CurrentWater -= FinalWaterAmount;
 	
 	UE_LOG(LogTemp,Warning,TEXT("手压井ID:%s,取水请求%.2f,实际取水%.2f"),*DeviceID.ToString(),WaterAmount,FinalWaterAmount);
@@ -83,7 +86,7 @@ float AHandPump::TakeWater(float WaterAmount)
 	//同时打印到屏幕
 	GEngine->AddOnScreenDebugMessage(-1,5.0F,FColor::Green, FString::Printf(TEXT("手压井ID:%s,取水请求%.2f,实际取水%.2f"),*DeviceID.ToString(),WaterAmount,FinalWaterAmount));
 	 
-	return WaterAmount;
+	return FinalWaterAmount;
 	
 }
 
@@ -103,11 +106,11 @@ float AHandPump::PumpWater()
 		//检查手压井是否低于危险阈值
 		if (Durabiliity <= DurabiliityCriticalThreshold)
 		{
-			UE_LOG(LogTemp,Warning,TEXT("手压井ID: %s,目前耐久度:%2f,已低于危险阈值%f"),*DeviceID.ToString(),Durabiliity,DurabiliityCriticalThreshold);
+			UE_LOG(LogTemp,Warning,TEXT("手压井ID: %s,目前耐久度:%.2f,已低于危险阈值%.2f"),*DeviceID.ToString(),Durabiliity,DurabiliityCriticalThreshold);
 		}
 		if (Durabiliity <= 0.0F)
 		{
-			UE_LOG(LogTemp,Warning,TEXT("手压井ID: %s,目前耐久度:%2f,已损坏"),*DeviceID.ToString(),Durabiliity);
+			UE_LOG(LogTemp,Warning,TEXT("手压井ID: %s,目前耐久度:%.2f,已损坏"),*DeviceID.ToString(),Durabiliity);
 			bIsBroken = true;
 		}
 		
@@ -123,6 +126,8 @@ float AHandPump::PumpWater()
 	}
 }
 
+
+
 //获取当前水位占比
 float AHandPump::GetWaterPercentage() const
 {
@@ -137,7 +142,7 @@ float AHandPump::GetWaterPercentage() const
 
 //获取当前耐久度占比
 float AHandPump::GetDurabiliityPercentage() const
-{
+	{
 	//检查最大耐久度是否为0
 	ensure(MaxDurability > 0.0f);
 	if (MaxDurability == 0.0f)
@@ -145,7 +150,7 @@ float AHandPump::GetDurabiliityPercentage() const
 		return 0.0f;
 	}
 	return Durabiliity/MaxDurability;
-}
+	}
 //修复手压井
 void AHandPump::Repair()
 {
