@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "Actors/HandPump.h"
@@ -146,3 +146,35 @@ float AHandPump::GetDurabiliityPercentage() const
 	}
 	return Durabiliity/MaxDurability;
 }
+//修复手压井
+void AHandPump::Repair()
+{
+	if (bIsBroken)
+	{
+		//检查当前水位是否足够修复
+		if (CurrentWater >= HandPump::MIN_WATER_FOR_REPAIR)
+		{
+			//当前水位-最小水位保证水位不小于0
+			CurrentWater -= HandPump::MIN_WATER_FOR_REPAIR;
+			//当前水位=当前水位-保证水位不大于最大水位
+			CurrentWater = FMath::Clamp(CurrentWater,0.0f,MaxWater);
+			
+			//todo:需要耗材修复
+			
+			//修复耐久度
+			Durabiliity = MaxDurability * HandPump::PEPAIR_RESTORE_PERCENT;
+			
+			//bIsBroken 修复后设置为false，表示已修复
+			bIsBroken = false;
+			//输出修复成功信息
+			UE_LOG(LogTemp,Warning,TEXT("手压井ID: %s,已修复"),*DeviceID.ToString());
+		}
+		//当前水位不足修复
+		else
+		{
+			UE_LOG(LogTemp,Warning,TEXT("手压井ID: %s,当前水位:%2f,无法修复"),*DeviceID.ToString(),CurrentWater);
+		}
+	}	
+}
+
+

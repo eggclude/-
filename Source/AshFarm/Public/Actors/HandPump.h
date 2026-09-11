@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -116,7 +116,13 @@ public:
 	UFUNCTION(BlueprintCallable,Category="手压井功能",meta=(DisplayName="泵水"))
 	float PumpWater();
 	
-	//统计和数据函数
+	//修复手压井
+	UFUNCTION(BlueprintCallable,Category="手压井功能",meta=(DisplayName="修复"))
+	void Repair();
+	
+	//检查测试是否需要修复
+	UFUNCTION(CallInEditor,Category="手压井状态",meta=(DisplayName="检查测试是否需要修复"))
+	void TestRepair(){Repair();}
 	
 	
 	#pragma endregion
