@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -112,8 +112,9 @@ public:
 	
 	#pragma region 功能函数区
 	
-
-	
+	//巡检 Maintain
+	UFUNCTION(BlueprintCallable,Category="手压井功能",meta=(DisplayName="巡检"))
+	FString Maintain();
 	
 	//取水 TakeWater()
 	UFUNCTION(BlueprintCallable,Category="手压井功能",meta=(DisplayName="取水"))

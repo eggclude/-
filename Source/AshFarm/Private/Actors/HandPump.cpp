@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "Actors/HandPump.h"
@@ -219,3 +219,47 @@ bool AHandPump::Repair()
 	UE_LOG(LogTemp,Warning,TEXT("手压井ID: %s,已修复,修复剩余次数：%d，耐久度恢复到%.2f"),*DeviceID.ToString(),RepairAttempts,Durabiliity);
 	return true;
 	}
+
+//巡检 Maintain
+FString AHandPump::Maintain()
+{
+	FString Report = TEXT("");
+	bool bDidSomething = false;
+	//bDidSomething 做了什么事情，是否有需要修复的问题：这一趟有没有干活 有的话为True 没有为False
+	
+	//第一关,检查手压井是否损坏
+	if (bIsBroken)
+	{
+		//todo: Repair只返回了是否修复成功，但是没有返回失败原因，有待优化
+		if (Repair())
+		{
+			Report += TEXT("手压井坏了,已修复");	
+			bDidSomething = true;
+		}
+		else
+		{
+			Report += TEXT("手压井坏了,修复失败");
+			//返回修复失败信息
+			return Report;
+		}
+	}
+	//第二关,耐久度检查
+		if(Durabiliity <= DurabiliityCriticalThres)
+		{
+			Report += TEXT("手压井耐久度低于危险阈值,请修复");
+			bDidSomething = true;
+		}
+	//第三关,检查当前水位检查
+		if (GetWaterPercentage() <= HandPumpDefaults::DEFAULT_LOW_WATER_THRES)
+		{
+			float PumpedWater = PumpWater();
+			Report += FString::Printf(TEXT("手压井当前水位过低,请修复%f"),PumpedWater);
+			bDidSomething = true;
+		}
+	if (!bDidSomething)
+	{
+		Report += TEXT("手压井正常,无需修复");
+		
+	}
+	return Report;
+}
