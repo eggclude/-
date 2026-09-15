@@ -1,5 +1,24 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
+namespace plantBedDefaults
+{
+	static const float DEFAULT_SOIL_FERTILITY			= 60.0f;	//默认土壤肥力
+	static const float MAX_SOIL_FERTILITY				= 100.0f;	//最大土壤肥力
+	static const float FERTILITY_POOR_THRESHOLD			= 30.0f;	//土壤肥力贫瘠阈值，低于该值为贫瘠
+	static const float FERTILITY_FERTILE_THRESHOLD		= 70.0f;	//土壤肥沃阈值，高于该值为土壤肥沃	
+	
+}
+
+
+
+UENUM(BlueprintType)
+enum class EsoilQuality: uint8 
+{
+	poor   UMETA(DisplayName=	"土壤状态：贫瘠"),
+	Normal UMETA(DisplayName=	"土壤状态：正常"),
+	Fertlie UMETA(DisplayName=	"土壤状态：肥沃"),
+};
+
 #pragma once
 
 #include "CoreMinimal.h"
@@ -39,13 +58,17 @@ public:
 	//meta=DisplayName : meta是属性名称 DisplayName是表述 因为ue只识别英文属性名
 	//const : 常量，不能被修改
 	
-	//土壤肥力
+	//土壤状态
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="土壤",meta=(DisplayName="土壤状态"))
+	EsoilQuality SoilQuality = EsoilQuality::Normal;
+	
+	//土壤肥力 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="土壤",meta=(DisplayName="土壤肥力"))
-	float Soilfertility = 1.0f ;
+	float Soilfertility = plantBedDefaults::DEFAULT_SOIL_FERTILITY;
 	
 	//MaxFertility最大肥力 设置最大肥力
 	UPROPERTY(EditAnywhere,Category="土壤",meta=(DisplayName= "最大肥力"))
-	float MaxFertility = 1.0f; 
+	float MaxFertility = plantBedDefaults::MAX_SOIL_FERTILITY; 
 	// const 加入后变为常量无法变更
 	
 	//土壤温度
@@ -77,6 +100,18 @@ public:
 	//void 没有返回如何值
 	void SetSoilfertility(float Fertility);
 	
+	//获取生长速度
+	UFUNCTION(BlueprintCallable,Category="土壤",meta=(DisplayName = "获取生长速度"))
+	float GetGrowthSpeed() const;
+	
+	//获取土壤状态文本
+	UFUNCTION(BlueprintPure,Category="土壤",meta=(DisplayName="获取土壤状态文本"))
+	FString GetSoilQualityText(EsoilQuality Quality) const;
+	
+	
+	
+	
+	
 	
 	//获取所有ApiantBed实例的数量
 	UFUNCTION(BlueprintCallable,Category="统计",meta=(DisplayName="获取所有ApiantBed实例的数量"))
@@ -84,7 +119,7 @@ public:
 	
 	//组件不需要ue
 	//protected 保护，下面的函数和变量可以在本类内部和子类调用，其他类不能调用
-protected:
+	protected:
 	//组件TObjectPtr
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category = "Root")
 	TObjectPtr<USceneComponent>  Root; 
@@ -100,10 +135,12 @@ protected:
 	UPROPERTY(VisibleDefaultsOnly,BlueprintReadWrite,Category = "Box")
 	UBoxComponent* CollisionBox; //碰撞盒组件
 	
+	//更新土壤肥力状态
+	void UpdateSoilQuality();
+	
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-	
 	//EndPlay Event
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;	
 	

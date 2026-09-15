@@ -11,8 +11,8 @@ APIantbed::APIantbed()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-	Soilfertility = 1.0f; // 土壤肥力
-	MaxFertility = 1.0f; // 最大肥力
+	Soilfertility = plantBedDefaults::FERTILITY_FERTILE_THRESHOLD; // 土壤肥力
+	MaxFertility = plantBedDefaults::MAX_SOIL_FERTILITY; // 最大肥力
 	Moisture = 0.1f; // 土壤水分
 	MaxMoisture = 1.0f; // 最大土壤水分含量
 	Temperature = 26.0f; // 土壤温度
@@ -61,7 +61,7 @@ APIantbed::~APIantbed()
 	
 }
 
-// Called when the game starts or when spawned
+//开始播放事件
 void APIantbed::BeginPlay()
 {
 	Super::BeginPlay();
@@ -71,11 +71,14 @@ void APIantbed::BeginPlay()
 	
 }
 
+
 // Called every frame
 void APIantbed::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	//UE_LOG(LogTemp, Warning, TEXT("TotalCount: %d"), TotalCount);
+	//更新土壤肥力状态
+	UpdateSoilQuality();
 }
 
 //Endplay Event
@@ -83,27 +86,84 @@ void APIantbed::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	Super::EndPlay(EndPlayReason);
 	APIantbed::TotalCount--;
-
 }
-
 //获取土壤肥力
 float APIantbed::GetSoilfertility() const
 {
 	return Soilfertility;
 }
+//获取生长速度
+float APIantbed::GetGrowthSpeed() const
+{
+	switch (SoilQuality)
+	{
+	case EsoilQuality::poor:
+		return 0.5f;
+	
+	case EsoilQuality::Normal:
+		return 1.0f;
+		
+	case EsoilQuality::Fertlie:
+		return 1.5f;
+	
+	default:
+		UE_LOG(LogTemp, Warning, TEXT("种植树ID：%d,未知土壤肥力状态"), BadID);
+		return 1.0f;
+	}
+}
+//获取土壤状态文本
+	FString APIantbed::GetSoilQualityText(EsoilQuality Quality) const
+	{
+	switch (Quality)
+	{
+	case EsoilQuality::poor:
+		return TEXT("贫瘠");
+	case EsoilQuality::Normal:
+		return TEXT("正常");
+	case EsoilQuality::Fertlie:
+		return TEXT("肥沃");
+	default:
+		return TEXT("未知");
+	}
+}
+
 //设置土壤肥力
 void APIantbed::SetSoilfertility(float Fertility)
 {
 	Soilfertility = Fertility;
 }
-
-
 //获取所有种植床的数量
 int32 APIantbed::GetTotalCount()
 {
 	return APIantbed::TotalCount;
 }
-
+//更新土壤肥力状态
+void APIantbed::UpdateSoilQuality()
+{
+	EsoilQuality NewQuality;
+	
+	//todo: 实现土壤肥力状态
+	//土壤肥力状态判断
+	//土壤肥力低于贫瘠阈值，为贫瘠
+	if ( Soilfertility < plantBedDefaults::FERTILITY_POOR_THRESHOLD)
+		NewQuality = EsoilQuality::poor;
+	//土壤肥力低于肥沃阈值，高于贫瘠阈值，为正常
+	else if (Soilfertility< plantBedDefaults::FERTILITY_FERTILE_THRESHOLD)
+	{
+		NewQuality = EsoilQuality::Normal;
+	}
+	//土壤肥力高于肥沃阈值，为肥沃
+	else
+	{
+		NewQuality = EsoilQuality::Fertlie;
+	}
+	if (NewQuality != SoilQuality)
+	{
+		SoilQuality = NewQuality;
+		//输出当前土壤肥力状态
+		UE_LOG(LogTemp, Warning, TEXT("种植床ID: %d,当前土壤肥力状态: %s,土壤肥力:%.2f"), BadID, *UEnum::GetValueAsString(SoilQuality),Soilfertility);
+	}
+}
 
 
 
