@@ -2,6 +2,7 @@
 
 
 #include "Actors/HandPump.h"
+#include "AshFarm.h"
 
 // Sets default values
 AHandPump::AHandPump()
@@ -59,13 +60,13 @@ float AHandPump::TakeWater(float WaterAmount)
 	//1.请求不合理(WaterAmount <= 0.0f)
 	if (WaterAmount <= 0.0F)
 	{
-		UE_LOG(LogTemp,Warning,TEXT("手压井ID: %s,取水请求不合理"),*DeviceID.ToString());
+		UE_LOG(A_LogAshFarm,Warning,TEXT("手压井ID: %s,取水请求不合理"),*DeviceID.ToString());
 		return 0.0f;
 	}
 	//2.设备坏了（bIsBroken == true）
 	if (bIsBroken == true)
 	{
-		UE_LOG(LogTemp,Warning,TEXT("手压井ID: %s,设备坏了,不能取水"),*DeviceID.ToString());
+		UE_LOG(A_LogAshFarm,Warning,TEXT("手压井ID: %s,设备坏了,不能取水"),*DeviceID.ToString());
 		return 0.0f;
 	} 
 	//可用取水量 = 当前水位 - 保底最低水位
@@ -74,14 +75,14 @@ float AHandPump::TakeWater(float WaterAmount)
 	//4.水箱已经到最小水位（CurrentWater <= MIN_WATER_FOR_REPAIR）
 	if (AvailavleWater <= 0)
 	{
-		UE_LOG(LogTemp,Warning,TEXT("手压井ID: %s,当前水位为%.2f,不能取水"),*DeviceID.ToString(),CurrentWater);
+		UE_LOG(A_LogAshFarm,Warning,TEXT("手压井ID: %s,当前水位为%.2f,不能取水"),*DeviceID.ToString(),CurrentWater);
 		return 0.0f;
 	}
 	//3.水位不足（CurrentWater < WaterAmount）
 	float FinalWaterAmount = FMath::Min(AvailavleWater,WaterAmount);
 	CurrentWater -= FinalWaterAmount;
 	
-	UE_LOG(LogTemp,Warning,TEXT("手压井ID:%s,取水请求%.2f,实际取水%.2f"),*DeviceID.ToString(),WaterAmount,FinalWaterAmount);
+	UE_LOG(A_LogAshFarm,Warning,TEXT("手压井ID:%s,取水请求%.2f,实际取水%.2f"),*DeviceID.ToString(),WaterAmount,FinalWaterAmount);
 	
 	//复位空转次数
 	DryRunCount = 0;
@@ -109,11 +110,11 @@ float AHandPump::PumpWater()
 		//检查手压井是否低于危险阈值
 		if (Durabiliity <= DurabiliityCriticalThres)
 		{
-			UE_LOG(LogTemp,Warning,TEXT("手压井ID: %s,目前耐久度:%.2f,已低于危险阈值%.2f"),*DeviceID.ToString(),Durabiliity,DurabiliityCriticalThres);
+			UE_LOG(A_LogAshFarm,Warning,TEXT("手压井ID: %s,目前耐久度:%.2f,已低于危险阈值%.2f"),*DeviceID.ToString(),Durabiliity,DurabiliityCriticalThres);
 		}
 		if (Durabiliity <= 0.0F)
 		{
-			UE_LOG(LogTemp,Warning,TEXT("手压井ID: %s,目前耐久度:%.2f,已损坏"),*DeviceID.ToString(),Durabiliity);
+			UE_LOG(A_LogAshFarm,Warning,TEXT("手压井ID: %s,目前耐久度:%.2f,已损坏"),*DeviceID.ToString(),Durabiliity);
 			bIsBroken = true;
 		}
 		//记录泵水的次数
@@ -131,7 +132,7 @@ float AHandPump::PumpWater()
 		if (DryRunCount >=3)
 		{ 
 			//快爆炸了
-			UE_LOG(LogTemp,Warning,TEXT("手压井ID: %s,别再压了,手柄快断了"),*DeviceID.ToString());
+			UE_LOG(A_LogAshFarm,Warning,TEXT("手压井ID: %s,别再压了,手柄快断了"),*DeviceID.ToString());
 		}
 		FString Reason = TEXT("");
 		if (bIsBroken)
@@ -172,13 +173,13 @@ bool AHandPump::Repair()
 	//检查手压井是否损坏
 	if (!bIsBroken)
 	{
-		UE_LOG(LogTemp,Warning,TEXT("手压井ID: %s,未损坏,无需修复"),*DeviceID.ToString());
+		UE_LOG(A_LogAshFarm,Warning,TEXT("手压井ID: %s,未损坏,无需修复"),*DeviceID.ToString());
 		return false;
 	}
 	//检查修复次数是否用完
 	if (RepairAttempts <= 0)
 	{
-		UE_LOG(LogTemp,Warning,TEXT("手压井ID: %s,修复次数已用完"),*DeviceID.ToString());
+		UE_LOG(A_LogAshFarm,Warning,TEXT("手压井ID: %s,修复次数已用完"),*DeviceID.ToString());
 		return false;
 	}	
 	//修复次数
@@ -186,13 +187,13 @@ bool AHandPump::Repair()
 	//检查当前水位是否足够修复 （当前水位<=最小水位） MIN_WATER_FOR_PERAIR=10.0 
 	if (CurrentWater < HandPumpDefaults::MIN_WATER_FOR_PERAIR)
 	{
-		UE_LOG(LogTemp,Warning,TEXT("手压井ID: %s,当前水位:%.2f,无法修复"),*DeviceID.ToString(),CurrentWater);
+		UE_LOG(A_LogAshFarm,Warning,TEXT("手压井ID: %s,当前水位:%.2f,无法修复"),*DeviceID.ToString(),CurrentWater);
 		return false;
 	}
 	//检查当前水位是否足够修复 （当前水位>=最小水位） MIN_WATER_FOR_REPAIR=10.0 
 	if (CurrentWater <= HandPumpDefaults::MIN_WATER_FOR_REPAIR)
 	{
-		UE_LOG(LogTemp,Warning,TEXT("手压井ID: %s,当前水位:%.2f,无法修复"),*DeviceID.ToString(),CurrentWater);
+		UE_LOG(A_LogAshFarm,Warning,TEXT("手压井ID: %s,当前水位:%.2f,无法修复"),*DeviceID.ToString(),CurrentWater);
 		return false;
 	}
 	
@@ -216,7 +217,7 @@ bool AHandPump::Repair()
 	bIsBroken = false;
 			
 	//输出修复成功信息
-	UE_LOG(LogTemp,Warning,TEXT("手压井ID: %s,已修复,修复剩余次数：%d，耐久度恢复到%.2f"),*DeviceID.ToString(),RepairAttempts,Durabiliity);
+	UE_LOG(A_LogAshFarm,Warning,TEXT("手压井ID: %s,已修复,修复剩余次数：%d，耐久度恢复到%.2f"),*DeviceID.ToString(),RepairAttempts,Durabiliity);
 	return true;
 	}
 
