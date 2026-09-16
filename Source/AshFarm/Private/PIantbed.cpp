@@ -2,7 +2,9 @@
 
 
 #include "PIantbed.h"
+#include "AshFarm.h"
 #include "UObject/ConstructorHelpers.h"
+#include "DrawDebugHelpers.h"
 
 //初始化静态变量
 int32 APIantbed::TotalCount = 0;
@@ -10,9 +12,14 @@ int32 APIantbed::TotalCount = 0;
 APIantbed::APIantbed()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	//开启Tick函数 ,interval 100ms
 	PrimaryActorTick.bCanEverTick = true;
+	//设置Tick函数的间隔为500ms
+	PrimaryActorTick.TickInterval = 0.5f;
+	
+	
 	Soilfertility = plantBedDefaults::FERTILITY_FERTILE_THRESHOLD; // 土壤肥力
-	MaxFertility = plantBedDefaults::MAX_SOIL_FERTILITY; // 最大肥力
+	MaxSoilFertility = plantBedDefaults::MAX_SOIL_FERTILITY; // 最大肥力
 	Moisture = 0.1f; // 土壤水分
 	MaxMoisture = 1.0f; // 最大土壤水分含量
 	Temperature = 26.0f; // 土壤温度
@@ -55,6 +62,12 @@ APIantbed::APIantbed()
 	CollisionBox->SetRelativeLocation(FVector(0.0f, 0.0f,20.0f));
 	CollisionBox->SetCollisionProfileName(TEXT("OverlapAllDynamic"));
 }
+void APIantbed::OnConstruction(const FTransform& Transform)
+{
+	UpdateSoilQuality();//初始化土壤肥力状态
+}
+
+
 //析构函数
 APIantbed::~APIantbed()
 {
@@ -66,8 +79,12 @@ void APIantbed::BeginPlay()
 {
 	Super::BeginPlay();
 	APIantbed::TotalCount++;  //TotalCount = 0 自增1
-	
-	UE_LOG(LogTemp, Warning, TEXT("种植床ID: %d"), BadID);
+	//初始化土壤肥力状态
+	UpdateSoilQuality();
+	ensureAlwaysMsgf(MaxSoilFertility > 0.0f, TEXT("最大肥力MaxSoilFertility不能小于0"));
+	ensureAlwaysMsgf(MaxMoisture > 0.0f, TEXT("最大土壤水分含量MaxMoisture不能小于0"));
+
+	UE_LOG(A_LogAshFarm, Warning, TEXT("种植床ID: %d"), BadID);
 	
 }
 
@@ -75,15 +92,36 @@ void APIantbed::BeginPlay()
 // Called every frame
 void APIantbed::Tick(float DeltaTime)
 {
+	//DeltaTime 时间间隔 帧与帧的时间间隔
 	Super::Tick(DeltaTime);
-	//UE_LOG(LogTemp, Warning, TEXT("TotalCount: %d"), TotalCount);
+
+	//UE_LOG(A_LogAshFarm, Warning, TEXT("TotalCount: %d"), TotalCount);
+	//土壤肥力损失 = 每单位辐射等级的乘数*辐射等级*时间间隔
+	Soilfertility -= 
+		RadiationLevel * plantBedDefaults::FERTILITY_LOSS_PER_RADIATION_LEVEL * DeltaTime	//每单位辐射等级*所流失的土壤损失量
+	    + plantBedDefaults::FERTILITY_LOSS_PER_SECOND * DeltaTime;							//时间乘数* 和上面合并加上土壤自然损失量
+	
+	//土壤肥力损失量不能小于0,土壤肥力损失量不能大于最大肥力
+	Soilfertility = FMath::Clamp(Soilfertility, 0.0f, MaxSoilFertility);
 	//更新土壤肥力状态
 	UpdateSoilQuality();
+	
+	FVector TEXTLoaction= GetActorLocation()+FVector(0,0,100.0f);  //土壤肥力文本位置，FVector(0,0,1 00.0f) 表示在当前位置的上方
+	DrawDebugString(
+		GetWorld(), 
+		TEXTLoaction,
+		FString::Printf(TEXT("种植床ID:%d,土壤肥力:%.f,土壤状态:%s"),
+			BadID,Soilfertility,*GetSoilQualityText(SoilQuality)),
+			nullptr ,
+			FColor::White,
+			0.5f,
+			true);   //显示时间间隔为0.5秒
 }
 
 //Endplay Event
 void APIantbed::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
+	Super::EndPlay(EndPlayReason);
 	Super::EndPlay(EndPlayReason);
 	APIantbed::TotalCount--;
 }
@@ -107,7 +145,7 @@ float APIantbed::GetGrowthSpeed() const
 		return 1.5f;
 	
 	default:
-		UE_LOG(LogTemp, Warning, TEXT("种植树ID：%d,未知土壤肥力状态"), BadID);
+		UE_LOG(A_LogAshFarm, Warning, TEXT("种植树ID：%d,未知土壤肥力状态"), BadID);
 		return 1.0f;
 	}
 }
@@ -126,6 +164,7 @@ float APIantbed::GetGrowthSpeed() const
 		return TEXT("未知");
 	}
 }
+
 
 //设置土壤肥力
 void APIantbed::SetSoilfertility(float Fertility)
@@ -148,7 +187,7 @@ void APIantbed::UpdateSoilQuality()
 	if ( Soilfertility < plantBedDefaults::FERTILITY_POOR_THRESHOLD)
 		NewQuality = EsoilQuality::poor;
 	//土壤肥力低于肥沃阈值，高于贫瘠阈值，为正常
-	else if (Soilfertility< plantBedDefaults::FERTILITY_FERTILE_THRESHOLD)
+	else if (Soilfertility < plantBedDefaults::FERTILITY_FERTILE_THRESHOLD)
 	{
 		NewQuality = EsoilQuality::Normal;
 	}
@@ -161,7 +200,7 @@ void APIantbed::UpdateSoilQuality()
 	{
 		SoilQuality = NewQuality;
 		//输出当前土壤肥力状态
-		UE_LOG(LogTemp, Warning, TEXT("种植床ID: %d,当前土壤肥力状态: %s,土壤肥力:%.2f"), BadID, *UEnum::GetValueAsString(SoilQuality),Soilfertility);
+		UE_LOG(A_LogAshFarm, Warning, TEXT("种植床ID: %d,当前土壤肥力状态: %s,土壤肥力:%.2f"), BadID, *GetSoilQualityText(SoilQuality),Soilfertility);
 	}
 }
 

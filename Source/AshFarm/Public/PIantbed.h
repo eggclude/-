@@ -2,11 +2,13 @@
 
 namespace plantBedDefaults
 {
-	static const float DEFAULT_SOIL_FERTILITY			= 60.0f;	//默认土壤肥力
-	static const float MAX_SOIL_FERTILITY				= 100.0f;	//最大土壤肥力
-	static const float FERTILITY_POOR_THRESHOLD			= 30.0f;	//土壤肥力贫瘠阈值，低于该值为贫瘠
-	static const float FERTILITY_FERTILE_THRESHOLD		= 70.0f;	//土壤肥沃阈值，高于该值为土壤肥沃	
+	static constexpr float DEFAULT_SOIL_FERTILITY					= 60.0f;	//默认土壤肥力
+	static constexpr float MAX_SOIL_FERTILITY						= 100.0f;	//最大土壤肥力
+	static constexpr float FERTILITY_POOR_THRESHOLD					= 30.0f;	//土壤肥力贫瘠阈值，低于该值为贫瘠
+	static constexpr float FERTILITY_FERTILE_THRESHOLD				= 70.0f;	//土壤肥沃阈值，高于该值为土壤肥沃	
 	
+	static constexpr float FERTILITY_LOSS_PER_RADIATION_LEVEL		= 0.01f;	//每单位辐射等级的乘数,土壤肥力损失量
+	static constexpr float FERTILITY_LOSS_PER_SECOND				= 0.01f;		//土壤肥力自然损失量	
 }
 
 
@@ -59,16 +61,16 @@ public:
 	//const : 常量，不能被修改
 	
 	//土壤状态
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="土壤",meta=(DisplayName="土壤状态"))
+		UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="土壤",meta=(DisplayName="土壤状态"))
 	EsoilQuality SoilQuality = EsoilQuality::Normal;
 	
 	//土壤肥力 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="土壤",meta=(DisplayName="土壤肥力"))
 	float Soilfertility = plantBedDefaults::DEFAULT_SOIL_FERTILITY;
 	
-	//MaxFertility最大肥力 设置最大肥力
+	//MaxSoilFertility 最大肥力 设置最大肥力
 	UPROPERTY(EditAnywhere,Category="土壤",meta=(DisplayName= "最大肥力"))
-	float MaxFertility = plantBedDefaults::MAX_SOIL_FERTILITY; 
+	float MaxSoilFertility = plantBedDefaults::MAX_SOIL_FERTILITY; 
 	// const 加入后变为常量无法变更
 	
 	//土壤温度
@@ -107,8 +109,10 @@ public:
 	//获取土壤状态文本
 	UFUNCTION(BlueprintPure,Category="土壤",meta=(DisplayName="获取土壤状态文本"))
 	FString GetSoilQualityText(EsoilQuality Quality) const;
-	
-	
+		
+	//构造函数
+	//OnConstruction 构造函数，当实例化时调用,类似于构造函数() 每次拖动或者修改值时调用
+	virtual void OnConstruction(const FTransform& Transform) override;
 	
 	
 	
@@ -136,6 +140,7 @@ public:
 	UBoxComponent* CollisionBox; //碰撞盒组件
 	
 	//更新土壤肥力状态
+	UFUNCTION(BlueprintCallable,Category="土壤",meta=(DisplayName="更新土壤肥力状态"))
 	void UpdateSoilQuality();
 	
 public:	
