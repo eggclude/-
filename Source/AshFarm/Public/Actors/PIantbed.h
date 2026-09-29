@@ -1,35 +1,56 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "GameFramework/Actor.h"
+#include "Components/BoxComponent.h"
+#include "Plants/PlantBase.h"
+#include "PIantbed.generated.h"
+
+#define GROWTH_SPEED_SALINE		0.0F
+#define GROWTH_SPEED_POOR		0.5F
+#define GROWTH_SPEED_NORMAL		1.0F
+#define GROWTH_SPEED_FERTILE	1.5F
+
+//种植床默认值 阈值类
 namespace plantBedDefaults
 {
 	static constexpr float DEFAULT_SOIL_FERTILITY					= 60.0f;	//默认土壤肥力
 	static constexpr float MAX_SOIL_FERTILITY						= 100.0f;	//最大土壤肥力
 	static constexpr float FERTILITY_POOR_THRESHOLD					= 30.0f;	//土壤肥力贫瘠阈值，低于该值为贫瘠
 	static constexpr float FERTILITY_FERTILE_THRESHOLD				= 70.0f;	//土壤肥沃阈值，高于该值为土壤肥沃	
+	static constexpr float FERTILITY_SALINE_THRESHOLD				= 10.0f;	//土壤肥力盐碱地阈值，低于该值为盐碱地
 	
 	static constexpr float FERTILITY_LOSS_PER_RADIATION_LEVEL		= 0.01f;	//每单位辐射等级的乘数,土壤肥力损失量
-	static constexpr float FERTILITY_LOSS_PER_SECOND				= 0.01f;		//土壤肥力自然损失量	
+	static constexpr float FERTILITY_LOSS_PER_SECOND				= 0.01f;	//土壤肥力自然损失量	
+	
+	static constexpr float MOISTURE_LOSS_PER_SECOND					= 0.005f;	//归一化，土壤湿度自然流失量
+	static constexpr float MOISTURE_SALINE_LOSS_MULTI				= 1.5f;		//乘数，盐碱地土壤湿度自然流失量
+	static constexpr float MOISTURE_POOR_LOSS_MULTI					= 2.0f;		//乘数，贫瘠地土壤湿度自然流失量
+	static constexpr float MOISTURE_NORMAL_LOSS_MULTI				= 1.0f; 	//乘数，正常土壤湿度自然流失量
+	static constexpr float MOISTURE_FERTILE_LOSS_MULTI				= 0.5f;		//乘数，肥沃土壤湿度自然流失量
+	static constexpr float FERTILITY_RECOVER_REC_SECOND				= 0.2f;		//无辐射时，土地肥力自愈速率（每秒）
+	
 }
-
-
 
 UENUM(BlueprintType)
 enum class EsoilQuality: uint8 
 {
+	Saline UMETA(DisplayName=	"土壤状态:盐碱地"),
 	poor   UMETA(DisplayName=	"土壤状态：贫瘠"),
 	Normal UMETA(DisplayName=	"土壤状态：正常"),
 	Fertlie UMETA(DisplayName=	"土壤状态：肥沃"),
 };
 
-#pragma once
-
-#include "CoreMinimal.h"
-#include "GameFramework/Actor.h"
-#include "Components/SceneComponent.h"
-#include "Components/StaticMeshComponent.h"
-#include "UObject/ObjectPtr.h"
-#include "Components/BoxComponent.h"
-#include "PIantbed.generated.h"
+//UENUM(BlueprintType)
+//enum class ECropType: uint8 
+//{
+//	None UMETA(DisplayName=	"无作物"), 
+//	Wheat UMETA(DisplayName="小麦"), 
+//	Corn UMETA(DisplayName=	"玉米")
+//};
 
 UCLASS(ClassGroup = "AshFarm | 种植系统")
 class ASHFARM_API APIantbed : public AActor
@@ -60,9 +81,13 @@ public:
 	//meta=DisplayName : meta是属性名称 DisplayName是表述 因为ue只识别英文属性名
 	//const : 常量，不能被修改
 	
+	//目前种植的作物类型
+	UPROPERTY(EditAnywhere,Instanced,BlueprintReadWrite,Category="种植床",meta=(DisplayName="种植作物类型"))
+	TObjectPtr<UPlantBase> CurrentPlant;
+	
 	//土壤状态
-		UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="土壤",meta=(DisplayName="土壤状态"))
-	EsoilQuality SoilQuality = EsoilQuality::Normal;
+	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="土壤",meta=(DisplayName="土壤状态"))
+	EsoilQuality	SoilQuality = EsoilQuality::Normal;
 	
 	//土壤肥力 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="土壤",meta=(DisplayName="土壤肥力"))
@@ -72,6 +97,7 @@ public:
 	UPROPERTY(EditAnywhere,Category="土壤",meta=(DisplayName= "最大肥力"))
 	float MaxSoilFertility = plantBedDefaults::MAX_SOIL_FERTILITY; 
 	// const 加入后变为常量无法变更
+	
 	
 	//土壤温度
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="土壤",meta=(Displayname="土壤温度"))
@@ -108,18 +134,43 @@ public:
 	
 	//获取土壤状态文本
 	UFUNCTION(BlueprintPure,Category="土壤",meta=(DisplayName="获取土壤状态文本"))
-	FString GetSoilQualityText(EsoilQuality Quality) const;
+	FString GetSoilQualityText() const;
+	
+	//获取土壤湿度流失率
+	UFUNCTION(BlueprintPure,Category="土壤",meta=(DisplayName="获取土壤湿度流失率"))
+	float GetMoistureLossRate() const;
 		
+	//设置土壤流失率
+	UFUNCTION(BlueprintCallable,Category="土壤",meta=(DisplayName="设置土壤流失率"))
+	void SetMoistureLossPerSecond(float DeltaTime);
+	
+	//设置土壤肥力流失率
+	UFUNCTION(BlueprintCallable,Category="土壤",meta=(DisplayName="设置土壤肥力流失率"))
+	void SetFertilityLossPerSecond(float DeltaTime);
+	
 	//构造函数
 	//OnConstruction 构造函数，当实例化时调用,类似于构造函数() 每次拖动或者修改值时调用
 	virtual void OnConstruction(const FTransform& Transform) override;
 	
+	//评估种植结果
+	//UFUNCTION(BlueprintCallable,Category="种植",meta=(DisplayName="评估种植结果"))
+	//FString EvaluatePlanting(ECropType Crop) const;
 	
-	
+	//获取作物名称
+	/*UFUNCTION(BlueprintPure,Category="种植",meta=(DisplayName="获取作物名称"))
+	FString GetCropName(ECropType Crop) const;*/
 	
 	//获取所有ApiantBed实例的数量
 	UFUNCTION(BlueprintCallable,Category="统计",meta=(DisplayName="获取所有ApiantBed实例的数量"))
 	static  int32 GetTotalCount();
+	
+	
+	#pragma region 土壤状态机
+	
+	//土壤状态机
+	//记录土壤转换次数
+	UPROPERTY(VisibleInstanceOnly,BlueprintReadOnly,Category="土壤",meta=(DisplayName="土壤转换次数"))
+	int32 TransitionCount = 0;
 	
 	//组件不需要ue
 	//protected 保护，下面的函数和变量可以在本类内部和子类调用，其他类不能调用
@@ -132,9 +183,11 @@ public:
 	TObjectPtr<UStaticMeshComponent> Mesh;
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+	
 	//种植点组件
 	UPROPERTY(VisibleDefaultsOnly,BlueprintReadWrite,Category = "PlantingPoint")
 	TObjectPtr<USceneComponent> PlantingPoint;
+	
 	//碰撞盒组件
 	UPROPERTY(VisibleDefaultsOnly,BlueprintReadWrite,Category = "Box")
 	UBoxComponent* CollisionBox; //碰撞盒组件
@@ -142,6 +195,11 @@ public:
 	//更新土壤肥力状态
 	UFUNCTION(BlueprintCallable,Category="土壤",meta=(DisplayName="更新土壤肥力状态"))
 	void UpdateSoilQuality();
+	
+	#pragma endregion
+	
+	
+	
 	
 public:	
 	// Called every frame

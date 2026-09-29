@@ -121,6 +121,7 @@ float AHandPump::PumpWater()
 		 PumpCount++;
 		
 		
+		
 		//Tchar* : 字符串指针, *DeviceID.ToString() : 字符串指针, CurrentWater : 指向一个TCHAR类型的变量
 		GEngine->AddOnScreenDebugMessage(-1,5.0F,FColor::Green, FString::Printf(TEXT("手压井ID: %s,当前水位：%.2f"),*DeviceID.ToString(),CurrentWater));
 		return CurrentWater-lastWater;
