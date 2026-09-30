@@ -9,6 +9,7 @@
 //初始化静态变量
 int32 APIantbed::TotalCount = 0;
 // Sets default values
+//构造函数
 APIantbed::APIantbed()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
@@ -30,6 +31,8 @@ APIantbed::APIantbed()
 	
 	Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));//创建Mesh的对象
 	
+	
+	//nameSpace命令空间 用于指定资源的路径
 	ConstructorHelpers::FObjectFinder<UStaticMesh> MeshAsset(TEXT("StaticMesh'/Engine/BasicShapes/Cube.Cube'"));
 	if (MeshAsset.Succeeded())
 	{
@@ -51,16 +54,24 @@ APIantbed::APIantbed()
 	//AttachToComponent附着到组件Root 他附着的方式是FAttachmentTransformRule 然后获取相对位置KeepRelativeTransform
 	//nameSpace命令空间
 	
+	
+	
 	PlantingPoint = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("种植点"));
 	PlantingPoint->AttachToComponent(Mesh, FAttachmentTransformRules::KeepRelativeTransform);
 	PlantingPoint->SetRelativeLocation( FVector(0.0f, 0.0f, 20.0f) );
 	
+	//植物网格体：名字必须和"种植点"区分开，挂在种植点下面
+	PlantMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("PlantMesh"));
+	PlantMesh->AttachToComponent(PlantingPoint, FAttachmentTransformRules::KeepRelativeTransform);//植物网格体附着到种植点
+	PlantMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);//关闭植物网格体的碰撞
 	
-	CollisionBox = CreateDefaultSubobject<UBoxComponent>(TEXT("CollisionBox"));
-	CollisionBox->AttachToComponent(Mesh, FAttachmentTransformRules::KeepRelativeTransform);
-	CollisionBox->SetBoxExtent(FVector(100.0f, 100.0f,100.0f));
-	CollisionBox->SetRelativeLocation(FVector(0.0f, 0.0f,20.0f));
-	CollisionBox->SetCollisionProfileName(TEXT("OverlapAllDynamic"));
+	
+	
+	CollisionBox = CreateDefaultSubobject<UBoxComponent>(TEXT("碰撞盒"));
+	CollisionBox->AttachToComponent(Mesh, FAttachmentTransformRules::KeepRelativeTransform);//碰撞盒附着到Mesh组件
+	CollisionBox->SetBoxExtent(FVector(100.0f, 100.0f,100.0f));//设置碰撞盒的大小为(100,100,100)
+	CollisionBox->SetRelativeLocation(FVector(0.0f, 0.0f,20.0f));//设置碰撞盒的相对位置为(0,0,20)
+	CollisionBox->SetCollisionProfileName(TEXT("OverlapAllDynamic"));//设置碰撞盒的碰撞配置文件为OverlapAllDynamic
 }
 void APIantbed::OnConstruction(const FTransform& Transform)
 {

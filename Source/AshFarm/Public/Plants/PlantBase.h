@@ -7,6 +7,15 @@
 #include "Engine/StaticMesh.h"
 #include "PlantBase.generated.h"
 
+namespace PlantDefaults
+{
+	const float GROWTH_PROGRESS_THRES = 0.3f;		//生长期网格体阈值
+	const float FERTILITY_PROGRESS_THRES = 0.6f;	//开花期网格体阈值
+	//植物阶段
+}
+
+
+
 /**
  * 植物基类
  * 
@@ -18,7 +27,7 @@
  * 
  * Blueprintable： 允许使用C++类作为蓝图类的父类
  */
-UCLASS(Abstract, BlueprintType, Blueprintable,meta=(DisplayName ="植物基类"))
+UCLASS(Abstract, BlueprintType, Blueprintable,DefaultToInstanced,EditInlineNew,meta=(DisplayName ="植物基类"))
 class ASHFARM_API UPlantBase : public UObject
 {
 	GENERATED_BODY()
@@ -67,6 +76,14 @@ class ASHFARM_API UPlantBase : public UObject
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="植物|外观",meta=(DisplayName = "幼苗期网格体"))
 	TObjectPtr<UStaticMesh> SeedlingMesh;
 	
+	//成长期网格体：植物在成熟前的网格体
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="植物|外观",meta=(DisplayName = "成长期网格体"))
+	TObjectPtr<UStaticMesh> GrowthMesh;
+	
+	//开花期网格体：植物成熟后显示的模型
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="植物|外观",meta=(DisplayName = "开花期网格体"))
+	TObjectPtr<UStaticMesh> FlowerMesh;
+	
 	//成熟期网格体：bIsMature 变成 true 之后换上的模型
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="植物|外观",meta=(DisplayName = "成熟期网格体"))
 	TObjectPtr<UStaticMesh> MatureMesh;
@@ -82,6 +99,12 @@ class ASHFARM_API UPlantBase : public UObject
 	//获取植物描述
 	UFUNCTION(BlueprintCallable,Category="植物",meta=(DisplayName="获取植物描述"))
 	virtual FString GetDescription() const ; 
+	
+	//根据生长进度更新网格体
+	UFUNCTION(BlueprintCallable,Category="植物",meta=(DisplayName="根据生长进度更新网格体"))
+	virtual UStaticMesh* GetStageMesh() const ; //函数的返回值不能用TObjectPtr
+		
+	
 	
 	/**
 	 * 生长: 由种植床在 Tick 中调用, 传入当前土壤环境, 推进生长进度

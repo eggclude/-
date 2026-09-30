@@ -9,6 +9,11 @@
 #include "Plants/PlantBase.h"
 #include "PIantbed.generated.h"
 
+//基类：种植床
+
+
+
+
 #define GROWTH_SPEED_SALINE		0.0F
 #define GROWTH_SPEED_POOR		0.5F
 #define GROWTH_SPEED_NORMAL		1.0F
@@ -79,10 +84,9 @@ public:
 	//BlueprintReadWrite ： 可读可编辑
 	//Category : 词条变体名称
 	//meta=DisplayName : meta是属性名称 DisplayName是表述 因为ue只识别英文属性名
-	//const : 常量，不能被修改
-	
+	//const : 常量，不能被修改 
 	//目前种植的作物类型
-	UPROPERTY(EditAnywhere,Instanced,BlueprintReadWrite,Category="种植床",meta=(DisplayName="种植作物类型"))
+	UPROPERTY(EditAnywhere,Instanced,BlueprintReadWrite,Category="种植",meta=(DisplayName="种植作物类型"))
 	TObjectPtr<UPlantBase> CurrentPlant;
 	
 	//土壤状态
@@ -191,6 +195,12 @@ public:
 	//碰撞盒组件
 	UPROPERTY(VisibleDefaultsOnly,BlueprintReadWrite,Category = "Box")
 	UBoxComponent* CollisionBox; //碰撞盒组件
+	
+	//静态网格体组件
+	UPROPERTY(VisibleDefaultsOnly,BlueprintReadWrite,Category = "Mesh",meta=(DisplayName="植物网格体"))
+	TObjectPtr<UStaticMeshComponent> PlantMesh;
+	
+	
 	
 	//更新土壤肥力状态
 	UFUNCTION(BlueprintCallable,Category="土壤",meta=(DisplayName="更新土壤肥力状态"))
