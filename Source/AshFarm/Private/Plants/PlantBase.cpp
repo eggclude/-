@@ -2,7 +2,8 @@
 #include "AshFarm.h"
 
 //析构函数
-UPlantBase::~UPlantBase() = default;
+/*UPlantBase::~UPlantBase() = default;*/
+
 
 //获取植物描述
 FString UPlantBase::GetDescription() const { 
@@ -19,10 +20,11 @@ void UPlantBase::Grow(
 	  float ToxicityLevel)
 {
 	//没有水或者已成熟就不生长
-	if (Moisture <= 0.0f || bIsMature)
+	if (Moisture <= PlantDefaults::GROWTH_PROGRESS_THRES || bIsMature)
 	{
 		return;
 	}
+	
 
 	//按时间和生长速度推进进度
 	GrowthProgress += GrowthSpeed * DeltaTime;
@@ -35,6 +37,32 @@ void UPlantBase::Grow(
 		OnMature();
 	}
 }
+
+//根据生长进度更新网格体
+UStaticMesh* UPlantBase::GetStageMesh() const
+{
+	//小于生长期返回种苗子网格体
+	if (GrowthProgress <= PlantDefaults::GROWTH_PROGRESS_THRES)
+	{
+		return SeedlingMesh;//生长进度小于等于阈值，返回种苗子网格体
+	}
+	//小于花期长期返回增长网格体
+	else if (GrowthProgress < PlantDefaults::FERTILITY_PROGRESS_THRES)
+	{
+		return GrowthMesh;//生长进度小于花期长期阈值，返回增长网格体
+	}
+	//小于成熟期返回开花网格体
+	else if (GrowthProgress < MatureProgress)
+	{
+		return FlowerMesh;//生长进度小于成熟期阈值，返回开花网格体
+	}
+	//大于等于成熟阈值返回成熟网格体
+	else
+	{
+		return MatureMesh;//生长进度大于等于成熟阈值，返回成熟网格体
+	}
+}
+
 
 //当成熟时调用
 void UPlantBase::OnMature()
