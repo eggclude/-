@@ -43,15 +43,6 @@ Desktop.ini
 # ===== UE generated map built-data (regenerable, large) =====
 *_BuiltData.uasset
 
-# ===== UE template content (keep only your Content/0_; these stay local, not uploaded) =====
-Content/__ExternalActors__/
-Content/__ExternalObjects__/
-Content/Characters/
-Content/Cursor/
-Content/LevelPrototyping/
-Content/Locations/
-Content/LowpolyStyle/
-Content/PolygonFarm/
-Content/TopDown/
-Content/Variant_Strategy/
-Content/Variant_TwinStick/
+# ===== Content =====
+# 自己的资产和所用素材包全部纳入版本管理（模板/素材包不再排除）
+# 只排除可再生的 *_BuiltData.uasset（见上方规则）
