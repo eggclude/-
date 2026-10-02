@@ -42,8 +42,6 @@ APIantbed::APIantbed()
 	
 	Mesh->AttachToComponent(Root, FAttachmentTransformRules::KeepRelativeTransform);
 	
-	
-	SetRootComponent(Mesh);
 	//CreateDefaultSubobject 在构造函数内生一个组件、
 	//组件可以举例为 人类的手机 挂在人的身上 人虽然有手机但是不是出生就有的
 	//Mesh和Root是类的对象
@@ -61,12 +59,12 @@ APIantbed::APIantbed()
 	PlantingPoint->SetRelativeLocation( FVector(0.0f, 0.0f, 20.0f) );
 	
 	//植物网格体：名字必须和"种植点"区分开，挂在种植点下面
-	PlantMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("PlantMesh"));
+	PlantMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("植物网格体"));
 	PlantMesh->AttachToComponent(PlantingPoint, FAttachmentTransformRules::KeepRelativeTransform);//植物网格体附着到种植点
 	PlantMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);//关闭植物网格体的碰撞
 	
 	
-	
+	//碰撞盒：名字必须和"种植点"区分开，挂在种植点下面
 	CollisionBox = CreateDefaultSubobject<UBoxComponent>(TEXT("碰撞盒"));
 	CollisionBox->AttachToComponent(Mesh, FAttachmentTransformRules::KeepRelativeTransform);//碰撞盒附着到Mesh组件
 	CollisionBox->SetBoxExtent(FVector(100.0f, 100.0f,100.0f));//设置碰撞盒的大小为(100,100,100)
