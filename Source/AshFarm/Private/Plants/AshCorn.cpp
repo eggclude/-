@@ -30,21 +30,21 @@ void UAshCorn::Grow(
 	  float ToxicityLevel)
 {
 	//玉米喜欢湿度50%以上（生长速度翻倍），湿度低于20%则减半
-	float MoistureMultiplier = 1.0f;
+	//根据湿度调整生长速度倍数
 	if (Moisture > 0.5f)
 	{
-		MoistureMultiplier = 2.0f;
+		GrowthSpeedMulti =2.0f;
 	}
 	else if (Moisture < 0.2f)
 	{
-		MoistureMultiplier = 0.5f;
+		GrowthSpeedMulti = 0.5f;
 	}
-
-	//按湿度倍率临时调整速度，再交给基类推进生长进度
-	const float OriginalSpeed = GrowthSpeed;
-	GrowthSpeed = OriginalSpeed * MoistureMultiplier;
+	else
+	{
+		GrowthSpeedMulti = 1.0f;
+	}
+	//调用基类的生长函数
 	Super::Grow(DeltaTime, Fertility, Moisture, Temperature, RadiationLevel, ToxicityLevel);
-	GrowthSpeed = OriginalSpeed;
 }
 
 //成熟

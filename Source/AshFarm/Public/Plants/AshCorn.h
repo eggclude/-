@@ -12,7 +12,7 @@
  * BlueprintType 可在蓝图中使用
  * Blueprintable 可在蓝图中实例化
  */
-UCLASS(BlueprintType,Blueprintable, meta=(DisplayName="灰烬玉米"))
+UCLASS(BlueprintType,Blueprintable, meta=(DisplayName="灰烬玉米基类"))
 class ASHFARM_API UAshCorn : public UPlantBase
 {
 	GENERATED_BODY()
