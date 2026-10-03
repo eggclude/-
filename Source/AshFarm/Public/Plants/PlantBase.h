@@ -44,16 +44,16 @@ class ASHFARM_API UPlantBase : public UObject
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="植物", meta=(DisplayName="植物名称"))
 	FString PlantName;
 	
-	//生长速度:每秒推进的成熟进度比例（归一化）
-	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="植物|生长数据",meta=(Displayname="生长速度"))
+	//生长速度
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="植物|生长数据",meta=(Displayname="生长速度"))
 	float GrowthSpeed= 1.0F;
 	
-	//每秒耗水量: 每秒消耗的湿度占最大湿度的比例（归一化）
-	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="植物|生长数据",meta=(Displayname="每秒耗水量"))
+	//每秒耗水量
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="植物|生长数据",meta=(Displayname="每秒耗水量"))
 	float WaterConsumption=0.01F;
 	
 	//每秒肥料消耗
-	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="植物|生长数据",meta=(Displayname="每秒肥料消耗"))
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="植物|生长数据",meta=(Displayname="每秒肥料消耗"))
 	float FertilityConsumption=0.01f;
 	
 	//生长进度
