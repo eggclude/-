@@ -26,9 +26,9 @@ void UPlantBase::Grow(
 	}
 	
 
-	//按时间和生长速度推进进度
-	GrowthProgress += GrowthSpeed * DeltaTime;
-
+	//按时间和生长速度倍数推进进度
+	GrowthProgress += GrowthSpeed * GrowthSpeedMulti * DeltaTime;
+	GrowthProgress = FMath::Clamp(GrowthProgress,0.0f,MatureProgress);//确保生长进度在0到成熟值之间
 	//检查是否成熟
 	if (GrowthProgress >= MatureProgress)
 	{
@@ -41,18 +41,19 @@ void UPlantBase::Grow(
 //根据生长进度更新网格体
 UStaticMesh* UPlantBase::GetStageMesh() const
 {
+	float GrowthProgressRation = GrowthProgress/MatureProgress;//GrowthProgressRation=成长进度除以成熟值 
 	//小于生长期返回种苗子网格体
-	if (GrowthProgress <= PlantDefaults::GROWTH_PROGRESS_THRES)
+	if (GrowthProgressRation <= PlantDefaults::GROWTH_PROGRESS_THRES)
 	{
 		return SeedlingMesh;//生长进度小于等于阈值，返回种苗子网格体
 	}
 	//小于花期长期返回增长网格体
-	else if (GrowthProgress < PlantDefaults::FERTILITY_PROGRESS_THRES)
+	else if (GrowthProgressRation < PlantDefaults::FERTILITY_PROGRESS_THRES)
 	{
 		return GrowthMesh;//生长进度小于花期长期阈值，返回增长网格体
 	}
 	//小于成熟期返回开花网格体
-	else if (GrowthProgress < MatureProgress)
+	else if (GrowthProgressRation < 1.0F)
 	{
 		return FlowerMesh;//生长进度小于成熟期阈值，返回开花网格体
 	}

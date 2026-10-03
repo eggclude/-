@@ -56,6 +56,10 @@ class ASHFARM_API UPlantBase : public UObject
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="植物|生长数据",meta=(Displayname="每秒肥料消耗"))
 	float FertilityConsumption=0.01f;
 	
+	//生长速度倍数
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="植物|生长数据",meta=(Displayname="生长速度倍数"))
+	float GrowthSpeedMulti = 1.0F;
+	
 	//生长进度
 	UPROPERTY(EditAnywhere,Category="植物|生长数据",meta=(DisplayName = "生长进度"))
 	float GrowthProgress =0.0f;
