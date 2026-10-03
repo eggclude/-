@@ -123,7 +123,7 @@ void APIantbed::Tick(float DeltaTime)
 	
 	SetMoistureLossPerSecond(DeltaTime);			//设置土壤水分流失率
 	
-	//生植物生长
+	//植物生长与土壤消耗
 	if (CurrentPlant != nullptr)//首先判断是不是指针
 	{
 		//调用植物的生长函数 并传递Grow内参数运行
@@ -134,28 +134,26 @@ void APIantbed::Tick(float DeltaTime)
 			Temperature,
 			RadiationLevel,
 			ToxicityLevel);
-		
-	//土壤水份消耗	
-	if (Moisture >= 0.0f )//如果土壤湿度大于等于0
+
+		//土壤水分消耗
+		if (Moisture >= 0.0f)//如果土壤湿度大于等于0
 		{
 			//开始耗水
 			Moisture -= CurrentPlant->WaterConsumption * DeltaTime;
 			//确保土壤湿度在最大土壤水分含量以下
 			Moisture = FMath::Clamp(Moisture,0.0f,MaxMoisture);
-		
-	}
-	}
-	//土壤肥力消耗	
-	if (Soilfertility >= 0.0f)//如果土壤肥力大于等于0
+		}
+
+		//土壤肥力消耗
+		if (Soilfertility >= 0.0f)//如果土壤肥力大于等于0
 		{
 			//开始耗肥
 			Soilfertility -= CurrentPlant->FertilityConsumption * DeltaTime;
 			//确保土壤肥力在最大肥力以下
 			Soilfertility = FMath::Clamp(Soilfertility,0.0f,MaxSoilFertility);
-		
-			
-		}	
-	//设置网格体	
+		}
+
+		//设置网格体
 		UpdatePlantMesh();
 	}
 	
@@ -173,7 +171,7 @@ void APIantbed::Tick(float DeltaTime)
 			BadID,Soilfertility,
 			*GetSoilQualityText(),
 			Moisture,
-			CurrentPlant->GrowthProgress),//获取当前植物的生长进度
+			(CurrentPlant ? CurrentPlant->GrowthProgress : 0.0f)),//获取当前植物的生长进度
 			nullptr ,
 			FColor::White,
 			0.5f,
