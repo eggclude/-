@@ -76,6 +76,7 @@ void APIantbed::OnConstruction(const FTransform& Transform)
 	Super::OnConstruction(Transform);  //调用父类的构造函数
 	
 	UpdateSoilQuality();//初始化土壤肥力状态
+	UpdatePlantMesh();//初始化植物网格体
 }
 //析构函数
 APIantbed::~APIantbed()
@@ -103,23 +104,63 @@ void APIantbed::BeginPlay()
 void APIantbed::Tick(float DeltaTime)
 {
 	//DeltaTime 时间间隔 帧与帧的时间间隔
-	Super::Tick(DeltaTime);
+	Super::Tick(DeltaTime); //
 
 	
 	//初始化过度次数为0
 	TransitionCount = 0;
 	//UE_LOG(A_LogAshFarm, Warning, TEXT("TotalCount: %d"), TotalCount);
 	SetFertilityLossPerSecond(DeltaTime);		//设置土壤肥力流失率
+	
+		//设置土壤肥力恢复速率
+    	//无辐射时，土地肥力自愈速率（每秒）
+    	if (RadiationLevel == 0)
+    	{
+    		Soilfertility += plantBedDefaults::FERTILITY_RECOVER_REC_SECOND * DeltaTime;
+    		//确保土壤肥力在最大肥力以下
+    		Soilfertility = FMath::Clamp(Soilfertility,0.0f,MaxSoilFertility);
+    	}
+	
 	SetMoistureLossPerSecond(DeltaTime);			//设置土壤水分流失率
 	
-	//设置土壤肥力恢复速率
-	//无辐射时，土地肥力自愈速率（每秒）
-	if (RadiationLevel == 0)
+	//生植物生长
+	if (CurrentPlant != nullptr)//首先判断是不是指针
 	{
-		Soilfertility += plantBedDefaults::FERTILITY_RECOVER_REC_SECOND * DeltaTime;
-		//确保土壤肥力在最大肥力以下
-		Soilfertility = FMath::Clamp(Soilfertility,0.0f,MaxSoilFertility);
+		//调用植物的生长函数 并传递Grow内参数运行
+		CurrentPlant->Grow(
+			DeltaTime,
+			Soilfertility,
+			Moisture,
+			Temperature,
+			RadiationLevel,
+			ToxicityLevel);
+		
+	//土壤水份消耗	
+	if (Moisture >= 0.0f )//如果土壤湿度大于等于0
+		{
+			//开始耗水
+			Moisture -= CurrentPlant->WaterConsumption * DeltaTime;
+			//确保土壤湿度在最大土壤水分含量以下
+			Moisture = FMath::Clamp(Moisture,0.0f,MaxMoisture);
+		
 	}
+	}
+	//土壤肥力消耗	
+	if (Soilfertility >= 0.0f)//如果土壤肥力大于等于0
+		{
+			//开始耗肥
+			Soilfertility -= CurrentPlant->FertilityConsumption * DeltaTime;
+			//确保土壤肥力在最大肥力以下
+			Soilfertility = FMath::Clamp(Soilfertility,0.0f,MaxSoilFertility);
+		
+			
+		}	
+	//设置网格体	
+		UpdatePlantMesh();
+	}
+	
+	
+	
 	
 	//更新土壤肥力状态
 	UpdateSoilQuality();
@@ -128,15 +169,18 @@ void APIantbed::Tick(float DeltaTime)
 	DrawDebugString(
 		GetWorld(), 
 		TEXTLoaction,
-		FString::Printf(TEXT("种植床ID:%d,土壤肥力:%.f,土壤状态:%s,土壤湿度:%.f"),
-			BadID,Soilfertility,*GetSoilQualityText(),Moisture),
+		FString::Printf(TEXT("种植床ID:%d,土壤肥力:%.f,土壤状态:%s,土壤湿度:%.f,目前植物生长进度:%f"),
+			BadID,Soilfertility,
+			*GetSoilQualityText(),
+			Moisture,
+			CurrentPlant->GrowthProgress),//获取当前植物的生长进度
 			nullptr ,
 			FColor::White,
 			0.5f,
 			true);   //显示时间间隔为0.5秒
 }
 
-//Endplay Event
+//结束播放事件
 void APIantbed::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	Super::EndPlay(EndPlayReason);
@@ -148,6 +192,23 @@ float APIantbed::GetSoilfertility() const
 {
 	return Soilfertility;
 }
+
+//更新植物网格体
+void APIantbed::UpdatePlantMesh()
+{
+	if (CurrentPlant != nullptr) //更新网格体 不等于空指针
+	{
+		UStaticMesh *StageMesh = CurrentPlant->GetStageMesh(); //获取当前植物的阶段网格体
+		if (StageMesh != nullptr&&PlantMesh ->GetStaticMesh()!=StageMesh)//如果阶段网格体不是空的并且植物网格体不是当前阶段网格体
+		{
+			PlantMesh ->SetStaticMesh(StageMesh);//设置植物网格体为当前阶段网格体
+		}
+	}
+}
+
+
+
+
 //获取生长速度
 float APIantbed::GetGrowthSpeed() const
 {
@@ -236,6 +297,9 @@ int32 APIantbed::GetTotalCount()
 	
 	}
 }
+
+
+
 //获取土壤湿度流失率
 float APIantbed::GetMoistureLossRate() const
 {

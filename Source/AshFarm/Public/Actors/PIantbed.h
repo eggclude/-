@@ -201,10 +201,17 @@ public:
 	TObjectPtr<UStaticMeshComponent> PlantMesh;
 	
 	
+#pragma region 功能函数
+	
 	
 	//更新土壤肥力状态
 	UFUNCTION(BlueprintCallable,Category="土壤",meta=(DisplayName="更新土壤肥力状态"))
 	void UpdateSoilQuality();
+	
+	
+   //更新植物网格体
+	UFUNCTION(BlueprintCallable,Category="土壤",meta=(DisplayName="更新植物网格体"))
+	void UpdatePlantMesh();
 	
 	#pragma endregion
 	
