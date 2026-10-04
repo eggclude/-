@@ -2,6 +2,7 @@
 
 
 #include "Actors/PIantbed.h"
+#include "Plants/PlantBase.h"
 #include "AshFarm.h"
 #include "UObject/ConstructorHelpers.h"
 #include "DrawDebugHelpers.h"
@@ -129,6 +130,7 @@ void APIantbed::Tick(float DeltaTime)
 		//调用植物的生长函数 并传递Grow内参数运行
 		CurrentPlant->Grow(
 			DeltaTime,
+			SoilQuality,
 			SoilFertility,
 			Moisture,
 			Temperature,

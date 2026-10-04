@@ -116,6 +116,13 @@ public:
 	UFUNCTION(BlueprintCallable,Category="土壤",meta=(DisplayName="设置土壤肥力流失率"))
 	void SetFertilityLossPerSecond(float DeltaTime);
 	
+	//设置土壤状态
+	//TODO 还没实现,先注释掉,否则 UHT 生成的代码会因为找不到函数体而链接失败
+	//UFUNCTION(BlueprintCallable,Category="土壤",meta=(DisplayName="设置土壤状态"))
+	//void SetSoilQuality(EsoilQuality Quality);
+		
+	
+	
 	//构造函数
 	//OnConstruction 构造函数，当实例化时调用,类似于构造函数() 每次拖动或者修改值时调用
 	virtual void OnConstruction(const FTransform& Transform) override;

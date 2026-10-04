@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -28,6 +28,7 @@ public:
 	//成熟 override重写
 	virtual void OnMature() override;
 	//重写植物描述
+	virtual FString GetDescription() const override;
 	//重写评估辐射等级
 	virtual float EvaluateRadiation(int32 RadiationLevel) const override;
 	//重写土壤湿度等级

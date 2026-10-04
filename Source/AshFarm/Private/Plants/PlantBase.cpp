@@ -1,6 +1,5 @@
-﻿#include "Plants/PlantBase.h"
+#include "Plants/PlantBase.h"
 #include "AshFarm.h"
-
 //析构函数
 /*UPlantBase::~UPlantBase() = default;*/
 
