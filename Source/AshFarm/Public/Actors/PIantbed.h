@@ -50,7 +50,7 @@ public:
 	//meta=DisplayName : meta是属性名称 DisplayName是表述 因为ue只识别英文属性名
 	//const : 常量，不能被修改 
 	//目前种植的作物类型
-	UPROPERTY(EditAnywhere,Instanced,BlueprintReadWrite,Category="种植",meta=(DisplayName="种植作物类型"))
+ 	UPROPERTY(EditAnywhere,Instanced,BlueprintReadWrite,Category="种植",meta=(DisplayName="种植作物类型"))
 	TObjectPtr<UPlantBase> CurrentPlant;
 	
 	//土壤状态

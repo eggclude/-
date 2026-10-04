@@ -3,12 +3,6 @@
 //析构函数
 /*UPlantBase::~UPlantBase() = default;*/
 
-
-//获取植物描述
-FString UPlantBase::GetDescription() const { 
-	return TEXT("一种灰烬时代的作物"); 
-}
-
 //生长
 void UPlantBase::Grow(
 	  float DeltaTime,

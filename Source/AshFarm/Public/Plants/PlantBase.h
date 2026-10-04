@@ -106,8 +106,9 @@ class ASHFARM_API UPlantBase : public UObject
 	
 	//获取植物描述
 	UFUNCTION(BlueprintCallable,Category="植物",meta=(DisplayName="获取植物描述"))
-	virtual FString GetDescription() const ; 
-	
+	virtual FString GetDescription() const PURE_VIRTUAL(,return TEXT("一种灰烬时代的作物");); 
+	//定义的基础类，其他字类可以重写这个函数必须不能和他的text文字一致
+	 
 	//根据生长进度更新网格体
 	UFUNCTION(BlueprintCallable,Category="植物",meta=(DisplayName="根据生长进度更新网格体"))
 	virtual UStaticMesh* GetStageMesh() const ; //函数的返回值不能用TObjectPtr

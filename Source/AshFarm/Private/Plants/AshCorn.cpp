@@ -18,7 +18,7 @@ UAshCorn::UAshCorn()
 
 //重写植物描述
 FString UAshCorn::GetDescription() const { 
-	return TEXT("最基础的作物，哪里都可以种"); 
+	return TEXT("灰烬玉米，最基础的作物，哪里都可以种"); 
 }
 //生长
 void UAshCorn::Grow(
