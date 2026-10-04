@@ -11,4 +11,3 @@
 //Macro : 宏定义
 DECLARE_LOG_CATEGORY_EXTERN(LogAshFarm, Log, All);
 DECLARE_LOG_CATEGORY_EXTERN(A_LogAshFarm, Log, All);
-

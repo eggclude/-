@@ -5,8 +5,9 @@
 #include "CoreMinimal.h"
 #include "UObject/Object.h"
 #include "Engine/StaticMesh.h"
+#include "Actors/PlantBedTypes.h"
 #include "PlantBase.generated.h"
-
+ 
 namespace PlantDefaults
 {
 	const float GROWTH_PROGRESS_THRES = 0.3f;		//生长期网格体阈值
@@ -38,6 +39,9 @@ class ASHFARM_API UPlantBase : public UObject
 	//析构函数
 	~UPlantBase() = default;
 	
+	
+	
+
 #pragma region 植物属性
 	
 	//植物名称
@@ -92,7 +96,7 @@ class ASHFARM_API UPlantBase : public UObject
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="植物|外观",meta=(DisplayName = "成熟期网格体"))
 	TObjectPtr<UStaticMesh> MatureMesh;
 #pragma endregion		
-	
+
 	
 #pragma region 植物函数功能
 	

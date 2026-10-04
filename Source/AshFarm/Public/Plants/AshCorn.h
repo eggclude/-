@@ -17,6 +17,8 @@ class ASHFARM_API UAshCorn : public UPlantBase
 {
 	GENERATED_BODY()
 
+	
+	
 public:
 	//构造函数
 	UAshCorn();
