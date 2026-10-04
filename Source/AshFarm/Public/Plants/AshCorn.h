@@ -23,15 +23,17 @@ public:
 	//构造函数
 	UAshCorn();
 	
-	
-	
-	
 	//生长 override重写
-	virtual void Grow(float DeltaTime, float Fertility, float Moisture, float Temperature, int32 RadiationLevel, float ToxicityLevel) override;
+	virtual void Grow(float DeltaTime, EsoilQuality SoilQuality,float Fertility, float Moisture, float Temperature, int32 RadiationLevel, float ToxicityLevel) override;
 	//成熟 override重写
 	virtual void OnMature() override;
 	//重写植物描述
-	virtual FString GetDescription() const override ;
-		
-
+	//重写评估辐射等级
+	virtual float EvaluateRadiation(int32 RadiationLevel) const override;
+	//重写土壤湿度等级
+	virtual float EvaluateMoisture(float Moisture) const override;
+	//重写环境温度等级
+	virtual float EvaluateTemperature(float Temperature) const override;
+	//重写土壤肥力等级
+	virtual float EvaluateFertility(float Fertility) const override;
 };

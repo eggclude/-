@@ -13,6 +13,7 @@ FString UPlantBase::GetDescription() const {
 //生长
 void UPlantBase::Grow(
 	  float DeltaTime,
+	  EsoilQuality SoilQuality,
 	  float Fertility,
 	  float Moisture,
 	  float Temperature,
@@ -24,10 +25,17 @@ void UPlantBase::Grow(
 	{
 		return;
 	}
-	
-
+	//综合评估倍率
+	float EvaluatedMulti =
+		EvaluateSoilQuality(SoilQuality) *		//评估土壤品质
+		EvaluateFertility(Fertility) *			//评估土壤肥力
+		EvaluateMoisture(Moisture) *			//评估土壤湿度
+		EvaluateTemperature(Temperature) *		//评估环境温度
+		EvaluateRadiation(RadiationLevel) *		//评估辐射等级
+		EvaluateToxicity(ToxicityLevel);		//评估毒性等级
+   
 	//按时间和生长速度倍数推进进度
-	GrowthProgress += GrowthSpeed * GrowthSpeedMulti * DeltaTime;
+	GrowthProgress += GrowthSpeed * EvaluatedMulti * DeltaTime;
 	GrowthProgress = FMath::Clamp(GrowthProgress,0.0f,MatureProgress);//确保生长进度在0到成熟值之间
 	//检查是否成熟
 	if (GrowthProgress >= MatureProgress)

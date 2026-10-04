@@ -23,28 +23,15 @@ FString UAshCorn::GetDescription() const {
 //生长
 void UAshCorn::Grow(
 	  float DeltaTime,
+	  EsoilQuality SoilQuality,
 	  float Fertility,
 	  float Moisture,
 	  float Temperature,
 	  int32 RadiationLevel,
 	  float ToxicityLevel)
 {
-	//玉米喜欢湿度50%以上（生长速度翻倍），湿度低于20%则减半
-	//根据湿度调整生长速度倍数
-	if (Moisture > 0.5f)
-	{
-		GrowthSpeedMulti =2.0f;
-	}
-	else if (Moisture < 0.2f)
-	{
-		GrowthSpeedMulti = 0.5f;
-	}
-	else
-	{
-		GrowthSpeedMulti = 1.0f;
-	}
 	//调用基类的生长函数
-	Super::Grow(DeltaTime, Fertility, Moisture, Temperature, RadiationLevel, ToxicityLevel);
+	Super::Grow(DeltaTime, SoilQuality, Fertility, Moisture, Temperature, RadiationLevel, ToxicityLevel);
 }
 
 //成熟
@@ -52,3 +39,44 @@ void UAshCorn::OnMature()
 {
 	UE_LOG(LogTemp, Warning, TEXT("灰烬玉米成熟可采集"));
 }
+
+//评估辐射等级
+float UAshCorn::EvaluateRadiation(int32 RadiationLevel) const
+{
+	//无辐射时,玉米非常喜欢
+	if (RadiationLevel  > 0)
+	{
+		return 0.0f;
+	}
+	return 1.0f;
+}
+//评估湿度等级
+float UAshCorn::EvaluateMoisture(float Moisture) const
+{
+	//湿度为0.9时,玉米生长速度减半
+	if (Moisture > 0.9f)
+	{
+		return 0.5f;
+	}
+	return 1.0f;
+}
+//评估环境温度等级s
+float UAshCorn::EvaluateTemperature(float Temperature) const
+{
+	//温度为5时,玉米停止生长
+	if (Temperature < 5.0f)
+	{
+		return 0.0f;
+	}
+	return 1.0f;
+}
+float UAshCorn::EvaluateFertility(float Fertility) const
+{
+	//肥力为30时,玉米速度为0.8倍
+	if (Fertility < 30.0f)
+	{
+		return 0.8f;
+	}
+	return 1.0f;
+}
+//评估土壤肥力等级

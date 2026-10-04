@@ -123,9 +123,11 @@ class ASHFARM_API UPlantBase : public UObject
 	 * @param RadiationLevel	当前辐射等级
 	 * @param ToxicityLevel		当前毒性等级
 	 */
+	//生长 override虚函数
 	UFUNCTION(BlueprintCallable,Category="植物",meta=(DisplayName="生长"))
 	virtual void Grow(  
 		UPARAM(DisplayName="帧间隔时间") float DeltaTime,
+		UPARAM(DisplayName="土壤品质") EsoilQuality SoilQuality,
 		UPARAM(DisplayName="土壤肥力") float Fertility,
 		UPARAM(DisplayName="土壤湿度") float Moisture,
 		UPARAM(DisplayName="环境温度") float Temperature,
@@ -135,8 +137,15 @@ class ASHFARM_API UPlantBase : public UObject
 	//当成熟时调用
 	UFUNCTION(BlueprintCallable,Category="植物",meta=(DisplayName="当成熟时"))
 	virtual void OnMature();
-
+	
+	virtual float EvaluateSoilQuality(EsoilQuality SoilQuality) const { return 1.0f; };//评估土壤品质
+	virtual float EvaluateFertility(float Fertility) const { return 1.0f; };//评估土壤肥力
+	virtual float EvaluateMoisture(float Moisture) const { return 1.0f; };//评估土壤湿度
+	virtual float EvaluateTemperature(float Temperature) const { return 1.0f; };//评估环境温度
+	virtual float EvaluateRadiation(int32 RadiationLevel) const { return 1.0f; };//评估辐射等级
+	virtual float EvaluateToxicity(float ToxicityLevel) const{return 1.0f; };//评估毒性等级
+};
+	
 	
 #pragma endregion	
-	
-};
+
