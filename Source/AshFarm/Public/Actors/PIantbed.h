@@ -57,6 +57,10 @@ public:
 	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="土壤",meta=(DisplayName="土壤状态"))
 	EsoilQuality SoilQuality = EsoilQuality::Normal;
 	
+	//土壤类型
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="土壤", meta=(DisplayName="土壤类型"))
+	ESoilType SoilType = ESoilType::Loam;
+	 
 	//土壤肥力 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="土壤",meta=(DisplayName="土壤肥力"))
 	float SoilFertility = plantBedDefaults::DEFAULT_SOIL_FERTILITY;
@@ -100,14 +104,26 @@ public:
 	UFUNCTION(BlueprintCallable,Category="土壤",meta=(DisplayName = "获取生长速度"))
 	float GetGrowthSpeed() const;
 	
-	//获取土壤状态文本
-	UFUNCTION(BlueprintPure,Category="土壤",meta=(DisplayName="获取土壤状态文本"))
+	//获取土壤品质文本
+	UFUNCTION(BlueprintPure,Category="土壤",meta=(DisplayName="获取土壤品质文本"))
 	FString GetSoilQualityText() const;
+	
+	//获取土壤类型文本
+	UFUNCTION(Blueprintable,Category="土壤",meta=(DisplayName="获取土壤类型文本"))
+	FString GetSoilTypeText() const;
 	
 	//获取土壤湿度流失率
 	UFUNCTION(BlueprintPure,Category="土壤",meta=(DisplayName="获取土壤湿度流失率"))
 	float GetMoistureLossRate() const;
-		
+	
+	//获取根据土壤类型获取土壤肥力流失率
+	UFUNCTION(BlueprintPure,Category="土壤",meta=(DisplayName="获取根据土壤类型获取土壤肥力流失率"))
+	float GetFertilityLossRateBySoilType() const;
+	
+	//获取根据土壤类型获取土壤湿度流失率
+	UFUNCTION(BlueprintPure,Category="土壤",meta=(DisplayName="获取根据土壤类型获取土壤湿度流失率"))
+	float GetMoistureLossRateBySoilType() const;
+	
 	//设置土壤流失率
 	UFUNCTION(BlueprintCallable,Category="土壤",meta=(DisplayName="设置土壤流失率"))
 	void SetMoistureLossPerSecond(float DeltaTime);

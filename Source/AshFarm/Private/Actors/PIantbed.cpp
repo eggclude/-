@@ -131,6 +131,7 @@ void APIantbed::Tick(float DeltaTime)
 		CurrentPlant->Grow(
 			DeltaTime,
 			SoilQuality,
+			SoilType,
 			SoilFertility,
 			Moisture,
 			Temperature,
@@ -169,22 +170,26 @@ void APIantbed::Tick(float DeltaTime)
 	DrawDebugString(
 		GetWorld(), 
 		TEXTLoaction,
-		FString::Printf(TEXT("种植床ID:%d,土壤肥力:%.f,土壤状态:%s,土壤湿度:%.f,目前植物生长进度:%f"),
-			BadID,SoilFertility,
-			*GetSoilQualityText(),
-			Moisture,
-			(CurrentPlant ? CurrentPlant->GrowthProgress : 0.0f)),//获取当前植物的生长进度
-			nullptr ,
-			FColor::White,
-			0.5f,
-			true);   //显示时间间隔为0.5秒
+		FString::Printf(TEXT("种植床ID:%d \n 土壤肥力:%.f 土壤品质:%s ,土壤类型:%s  土壤湿度:%.f \n 当前作物:%s  当前文本的生长阶段:%s(进度：%f)\n"),
+		BadID,
+		SoilFertility,
+		*GetSoilTypeText(),
+		*GetSoilQualityText(),
+		Moisture,
+		*CurrentPlant->GetPlantName(),
+		*CurrentPlant->GetGrowthStageText(),
+		CurrentPlant->GrowthProgress),
+		nullptr,
+		FColor::White, 
+		0.0f
+		);   //显示时间间隔为0.5秒
 }
 
 //结束播放事件
 void APIantbed::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	Super::EndPlay(EndPlayReason);
-	Super::EndPlay(EndPlayReason);
+
 	APIantbed::TotalCount--;
 }
 //获取土壤肥力
@@ -205,9 +210,6 @@ void APIantbed::UpdatePlantMesh()
 		}
 	}
 }
-
-
-
 
 //获取生长速度
 float APIantbed::GetGrowthSpeed() const
@@ -232,7 +234,7 @@ float APIantbed::GetGrowthSpeed() const
 		return GROWTH_SPEED_NORMAL;
 	}
 }
-	//获取土壤状态文本
+	//获取土壤品质文本
 	FString APIantbed::GetSoilQualityText() const
 	{
 	switch (SoilQuality)
@@ -249,8 +251,20 @@ float APIantbed::GetGrowthSpeed() const
 		return TEXT("未知");
 	}
 }
-
-
+//获取土壤类型文本
+FString APIantbed::GetSoilTypeText()const
+{
+	switch (SoilType)
+	{
+		return TEXT("沙土");
+	case ESoilType::Loam:
+		return TEXT("粘土");
+	case ESoilType::Clay:
+		return TEXT("粘土");
+	default:
+		return TEXT("未知");
+	}
+}
 
 //设置土壤肥力
 void APIantbed::SetSoilFertility(float Fertility)
@@ -298,8 +312,6 @@ int32 APIantbed::GetTotalCount()
 	}
 }
 
-
-
 //获取土壤湿度流失率
 float APIantbed::GetMoistureLossRate() const
 {
@@ -313,7 +325,7 @@ float APIantbed::GetMoistureLossRate() const
 		return plantBedDefaults::MOISTURE_NORMAL_LOSS_MULTI;
 		//肥沃状态
 	case EsoilQuality::Fertlie:
-		return plantBedDefaults::MOISTURE_FERTILE_LOSS_MULTI;
+ 		return plantBedDefaults::MOISTURE_FERTILE_LOSS_MULTI;
 	case EsoilQuality::Saline:
 		//盐碱地状态
 		return plantBedDefaults::MOISTURE_SALINE_LOSS_MULTI;
@@ -324,92 +336,62 @@ float APIantbed::GetMoistureLossRate() const
 	}
 }
 
-//设置土壤流失率
+//根据土壤类型计算肥力流失倍率
+float APIantbed::GetFertilityLossRateBySoilType() const
+{
+	switch (SoilType)
+	{
+	case ESoilType::Sand:
+		return plantBedDefaults::MOISTURE_SAND_LOSS_MULTI;
+	case ESoilType::Loam:
+		return plantBedDefaults::MOISTURE_LOAM_LOSS_MULTI;
+	case ESoilType::Clay:
+		return plantBedDefaults::MOISTURE_CLAY_LOSS_MULTI;
+	default:
+		return 1.0f;
+	}
+}
+//根据土壤类型计算湿度流失倍率
+float APIantbed::GetMoistureLossRateBySoilType() const
+{
+	switch (SoilType)
+	{
+	case ESoilType::Sand:
+		return plantBedDefaults::FERTILITY_SAND_LOSS_MULTI;//沙土湿度水分自然流失量
+	case ESoilType::Loam:
+		return plantBedDefaults::FERTILITY_LOAM_LOSS_MULTI;//泥土湿度水分自然流失量
+	case ESoilType::Clay:
+		return plantBedDefaults::FERTILITY_CLAY_LOSS_MULTI;//黏土湿度水分自然流失量
+	default:
+		return 1.0f;
+	}
+}
+
+//设置土壤湿度流失
 void APIantbed::SetMoistureLossPerSecond(float DeltaTime)
 {
 	//todo: 实现土壤流失率
-	//土壤流失率 = 获取默认土壤流失率 * 时间间隔
-	Moisture -= plantBedDefaults::MOISTURE_LOSS_PER_SECOND * GetMoistureLossRate() * DeltaTime;
+	//土壤流失率 = 获取默认土壤流失率 * 根据土壤类型计算湿度流失倍率 * 时间间隔
+	Moisture -=
+	plantBedDefaults::MOISTURE_LOSS_PER_SECOND 
+	* GetMoistureLossRateBySoilType() * DeltaTime;
+	
 	//土壤湿度不能小于0,土壤湿度不能大于最大湿度
 	Moisture = FMath::Clamp(Moisture, 0.0f, MaxMoisture);
 }
 
 
 
-//设置土壤肥力流失率
+//设置土壤肥力流失 
 void APIantbed::SetFertilityLossPerSecond(float DeltaTime)
 {
-	//土壤肥力损失 = 每单位辐射等级的乘数*辐射等级*时间间隔
+	//土壤肥力损失 = 每单位辐射等级的乘数*辐射等级*根据土壤类型计算肥力流失倍率*时间间隔
 	SoilFertility -= 
-		RadiationLevel * plantBedDefaults::FERTILITY_LOSS_PER_RADIATION_LEVEL * DeltaTime	//每单位辐射等级*所流失的土壤损失量
-		+ plantBedDefaults::FERTILITY_LOSS_PER_SECOND * DeltaTime;							//时间乘数* 和上面合并加上土壤自然损失量
+	RadiationLevel * plantBedDefaults::FERTILITY_LOSS_PER_RADIATION_LEVEL *GetFertilityLossRateBySoilType() * DeltaTime	//每单位辐射等级*所流失的土壤损失量
+	+ plantBedDefaults::FERTILITY_LOSS_PER_SECOND * DeltaTime;							//时间乘数* 和上面合并加上土壤自然损失量
 	
 	//土壤肥力损失量不能小于0,土壤肥力损失量不能大于最大肥力
 	SoilFertility = FMath::Clamp(SoilFertility, 0.0f, MaxSoilFertility);
 	
 }
 
-
-//获取作物名称
-/*
-FString APIantbed::GetCropName(ECropType Crop) const
-{
-	switch (Crop)
-	{
-	case ECropType::None:
-		return TEXT("无作物");
-	case ECropType::Wheat:
-		return TEXT("小麦");
-	case ECropType::Corn:
-		return TEXT("玉米");
-	default:
-		return TEXT("未知");
-	}
-}
-*/
-
-//评估种植结果
-//FString APIantbed::EvaluatePlanting(ECropType Crop) const
-//{
-	/*FString Result;
-
-	if (SoilQuality == EsoilQuality::Saline)
-	{
-		Result = TEXT("盐碱地不支持种植");
-	}
-	else if (Moisture <0.3f)
-	{
-		Result = TEXT("土壤湿度不足,浇点水再来");
-	}
-	else if (RadiationLevel >0)
-	{
-		Result = TEXT("有辐射,不支持种植");
-	}
-	else
-	{
-		switch (Crop)
-		{
-			case ECropType::Wheat:
-				Result = TEXT("小麦能种");
-				break;
-			case ECropType::Corn:
-				if (SoilFertility < 50.0f || Moisture < 0.5f)
-				{
-					Result = TEXT("玉米不喜欢这块地");
-				}
-				else
-				{
-					Result = TEXT("玉米能种");
-				}
-				break;
-			default:
-				Result = TEXT("未知作物,不支持种植");
-				break;
-		}
-	}  
-	
-	//【种植评估】作物: 玉米 | 土壤: 普通 (肥力 62) | 水分: 45% | 结论: 玉米嫌弃这块地
-	return FString::Printf(
-		TEXT("【种植评估】作物: %s | 土壤: %s (肥力 %.0f) | 水分: %.2f%% | 结论: %s"),
-		*GetCropName(Crop), *GetSoilQualityText(), SoilFertility, Moisture * 100.0f, *Result);
-}*/

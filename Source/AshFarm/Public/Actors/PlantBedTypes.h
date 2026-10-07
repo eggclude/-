@@ -28,8 +28,17 @@ namespace plantBedDefaults
 	static constexpr float MOISTURE_FERTILE_LOSS_MULTI				= 0.5f;		//乘数，肥沃土壤湿度自然流失量
 	static constexpr float FERTILITY_RECOVER_REC_SECOND				= 0.2f;		//无辐射时，土地肥力自愈速率（每秒）
 	
-}
+	static constexpr float MOISTURE_SAND_LOSS_MULTI					= 2.0f;		//乘数，沙土肥力自然流失量
+	static constexpr float MOISTURE_LOAM_LOSS_MULTI					= 1.0f;		//乘数，泥土肥力自然流失量
+	static constexpr float MOISTURE_CLAY_LOSS_MULTI					= 0.5f;		//乘数，黏土肥力自然流失量
+	static constexpr float FERTILITY_SAND_LOSS_MULTI				= 1.5f;     //乘数，沙土湿度自然水分流失量
+	static constexpr float FERTILITY_LOAM_LOSS_MULTI				= 1.0f;		//乘数，泥土湿度自然水分流失量
+	static constexpr float FERTILITY_CLAY_LOSS_MULTI				= 0.7f;		//乘数，黏土湿度自然水分流失量
+		
 
+
+}
+//土壤状态
 UENUM(BlueprintType)
 enum class EsoilQuality: uint8 
 {
@@ -37,4 +46,14 @@ enum class EsoilQuality: uint8
 	poor   UMETA(DisplayName=	"土壤状态：贫瘠"),
 	Normal UMETA(DisplayName=	"土壤状态：正常"),
 	Fertlie UMETA(DisplayName=	"土壤状态：肥沃"),
+};
+
+ /** 土壤类型
+ #*/
+UENUM(BlueprintType)
+enum class ESoilType: uint8 
+{
+	Sand UMETA(DisplayName=	"沙土"),
+	Loam  UMETA(DisplayName="泥土"),
+	Clay UMETA(DisplayName= "黏土"),
 };

@@ -3,10 +3,55 @@
 //析构函数
 /*UPlantBase::~UPlantBase() = default;*/
 
+
+void UPlantBase::SetGrowthStage()
+{
+	float GrowthProgressRation = GrowthProgress / MatureProgress;
+	//小于生长期返回种苗子网格体
+	if (GrowthProgressRation <= PlantDefaults::GROWTH_PROGRESS_THRES)
+	{
+		GrowthStage = EGrowthStage::Seeding;//生长进度小于等于阈值，返回种苗子网格体
+	}
+	//小于花期长期返回花期网格体
+	else if (GrowthProgressRation < PlantDefaults::FERTILITY_PROGRESS_THRES)
+	{
+		GrowthStage = EGrowthStage::Growing;//生长进度小于花期长期阈值，返回花期网格体
+	}
+	//小于成熟期返回开花网格体
+	else if (GrowthProgressRation < 1.0F)
+	{
+		GrowthStage = EGrowthStage::Flowering;//生长进度小于成熟期阈值，返回开花网格体
+	}
+	//大于等于成熟阈值返回成熟网格体
+	else
+	{
+		GrowthStage = EGrowthStage::Mature;//生长进度大于等于成熟阈值，返回成熟网格体
+	}
+}
+
+//获取生长阶段文本
+FString UPlantBase::GetGrowthStageText() const
+{
+	switch (GrowthStage)
+	{
+		case EGrowthStage::Seeding:
+		return TEXT("幼苗期");
+		case EGrowthStage::Growing:
+		return TEXT("生长期");
+		case EGrowthStage::Flowering:
+		return TEXT("开花期");
+		case EGrowthStage::Mature:
+		return TEXT("成熟期");
+		default:
+		return TEXT("未知阶段");
+	}
+}
+
 //生长
 void UPlantBase::Grow(
 	  float DeltaTime,
 	  EsoilQuality SoilQuality,
+	  ESoilType SoilType,
 	  float Fertility,
 	  float Moisture,
 	  float Temperature,
@@ -42,32 +87,18 @@ void UPlantBase::Grow(
 //根据生长进度更新网格体
 UStaticMesh* UPlantBase::GetStageMesh() const
 {
-	float GrowthProgressRation = GrowthProgress/MatureProgress;//GrowthProgressRation=成长进度除以成熟值 
-	//小于生长期返回种苗子网格体
-	if (GrowthProgressRation <= PlantDefaults::GROWTH_PROGRESS_THRES)
+	switch (GrowthStage)
 	{
+	case EGrowthStage::Seeding:
 		return SeedlingMesh;//生长进度小于等于阈值，返回种苗子网格体
-	}
-	//小于花期长期返回增长网格体
-	else if (GrowthProgressRation < PlantDefaults::FERTILITY_PROGRESS_THRES)
-	{
+		//小于花期长期返回增长网格体
+	case EGrowthStage::Growing:
 		return GrowthMesh;//生长进度小于花期长期阈值，返回增长网格体
+		//小于成熟期返回开花网格体
+	case EGrowthStage::Flowering:
+		return MatureMesh;//生长进度小于成熟期阈值，返回开花网格体
+		//大于等于成熟阈值返回成熟网格体
+	default:
+		return nullptr;//生长进度大于等于成熟阈值，返回成熟网格体
 	}
-	//小于成熟期返回开花网格体
-	else if (GrowthProgressRation < 1.0F)
-	{
-		return FlowerMesh;//生长进度小于成熟期阈值，返回开花网格体
-	}
-	//大于等于成熟阈值返回成熟网格体
-	else
-	{
-		return MatureMesh;//生长进度大于等于成熟阈值，返回成熟网格体
-	}
-}
-
-
-//当成熟时调用
-void UPlantBase::OnMature()
-{
-	UE_LOG(A_LogAshFarm, Warning, TEXT("植物名称：%s，植物成熟"), *GetPlantName());
 }

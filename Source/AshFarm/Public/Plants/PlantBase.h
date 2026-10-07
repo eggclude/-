@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -6,6 +6,7 @@
 #include "UObject/Object.h"
 #include "Engine/StaticMesh.h"
 #include "Actors/PlantBedTypes.h"
+#include "PlantType.h"
 #include "PlantBase.generated.h"
  
 namespace PlantDefaults
@@ -68,6 +69,10 @@ class ASHFARM_API UPlantBase : public UObject
 	UPROPERTY(EditAnywhere,Category="植物|生长数据",meta=(DisplayName = "生长进度"))
 	float GrowthProgress =0.0f;
 	
+	//GrowthStage
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="植物|生长数据",meta=(DisplayName = "生长阶段"))
+	EGrowthStage GrowthStage = EGrowthStage::Seeding;
+	
 	//成熟所需进度
 	UPROPERTY(EditAnywhere,Category="植物|生长数据",meta=(DisplayName = "成熟所需进度"))
 	float MatureProgress =100.0f;
@@ -79,7 +84,7 @@ class ASHFARM_API UPlantBase : public UObject
 #pragma endregion 植物属性
 	
 #pragma region 植物外观
-	 
+	
 	//幼苗期网格体：植物刚种下时显示的模型
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="植物|外观",meta=(DisplayName = "幼苗期网格体"))
 	TObjectPtr<UStaticMesh> SeedlingMesh;
@@ -97,7 +102,6 @@ class ASHFARM_API UPlantBase : public UObject
 	TObjectPtr<UStaticMesh> MatureMesh;
 #pragma endregion		
 
-	
 #pragma region 植物函数功能
 	
 	//获取植物名称
@@ -112,9 +116,28 @@ class ASHFARM_API UPlantBase : public UObject
 	//根据生长进度更新网格体
 	UFUNCTION(BlueprintCallable,Category="植物",meta=(DisplayName="根据生长进度更新网格体"))
 	virtual UStaticMesh* GetStageMesh() const ; //函数的返回值不能用TObjectPtr
-		
 	
+	//设置生长阶段	
+	UFUNCTION(Blueprintable,Category="植物",meta=(DisplayName="设置生长阶段"))
+	void SetGrowthStage();
 	
+	//获取生长阶段
+	UFUNCTION(BlueprintCallable,Category="植物",meta=(DisplayName="获取生长阶段"))
+	virtual EGrowthStage GetGrowthStage() const { return GrowthStage; };//获取生长阶段
+	
+	//获取生长阶段文本
+	UFUNCTION(Blueprintable,Category="植物",meta=(DisplayName="获取生长阶段文本")) 
+	virtual FString GetGrowthStageText() const;//获取生长阶段文本 
+	
+	#pragma endregion
+	
+#pragma endregion 土壤属性
+
+//获取土壤类型文本
+UFUNCTION(BlueprintCallable,Category="土壤",meta=(DisplayName="获取土壤类型文本"))
+virtual FString GetSoilTypeText() const;//获取土壤类型文本 
+
+#pragma endregion 土壤属性
 	/**
 	 * 生长: 由种植床在 Tick 中调用, 传入当前土壤环境, 推进生长进度
 	 * @param DeltaTime			距离上一帧的时间 (秒)
@@ -129,6 +152,7 @@ class ASHFARM_API UPlantBase : public UObject
 	virtual void Grow(  
 		UPARAM(DisplayName="帧间隔时间") float DeltaTime,
 		UPARAM(DisplayName="土壤品质") EsoilQuality SoilQuality,
+		UPARAM(DisplayName="土壤类型") ESoilType SoilType,
 		UPARAM(DisplayName="土壤肥力") float Fertility,
 		UPARAM(DisplayName="土壤湿度") float Moisture,
 		UPARAM(DisplayName="环境温度") float Temperature,
@@ -148,5 +172,5 @@ class ASHFARM_API UPlantBase : public UObject
 };
 	
 	
-#pragma endregion	
+
 

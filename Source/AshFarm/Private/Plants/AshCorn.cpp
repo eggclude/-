@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "Plants/AshCorn.h"
@@ -24,6 +24,7 @@ FString UAshCorn::GetDescription() const {
 void UAshCorn::Grow(
 	  float DeltaTime,
 	  EsoilQuality SoilQuality,
+	  ESoilType SoilType,
 	  float Fertility,
 	  float Moisture,
 	  float Temperature,
@@ -31,7 +32,7 @@ void UAshCorn::Grow(
 	  float ToxicityLevel)
 {
 	//调用基类的生长函数
-	Super::Grow(DeltaTime, SoilQuality, Fertility, Moisture, Temperature, RadiationLevel, ToxicityLevel);
+	Super::Grow(DeltaTime, SoilQuality, SoilType,Fertility, Moisture, Temperature, RadiationLevel, ToxicityLevel);
 }
 
 //成熟

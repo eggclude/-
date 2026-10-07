@@ -24,7 +24,7 @@ public:
 	UAshCorn();
 	
 	//生长 override重写
-	virtual void Grow(float DeltaTime, EsoilQuality SoilQuality,float Fertility, float Moisture, float Temperature, int32 RadiationLevel, float ToxicityLevel) override;
+	virtual void Grow(float DeltaTime, EsoilQuality SoilQuality,ESoilType SoilType,float Fertility, float Moisture, float Temperature, int32 RadiationLevel, float ToxicityLevel) override;
 	//成熟 override重写
 	virtual void OnMature() override;
 	//重写植物描述
