@@ -6,7 +6,7 @@
 #include "UObject/Object.h"
 #include "Engine/StaticMesh.h"
 #include "Actors/PlantBedTypes.h"
-#include "PlantType.h"
+#include "PlantTypes.h"
 #include "PlantBase.generated.h"
  
 namespace PlantDefaults
@@ -15,8 +15,6 @@ namespace PlantDefaults
 	const float FERTILITY_PROGRESS_THRES = 0.6f;	//开花期网格体阈值
 	//植物阶段
 }
-
-
 
 /**
  * 植物基类
@@ -39,9 +37,6 @@ class ASHFARM_API UPlantBase : public UObject
 	UPlantBase() = default;
 	//析构函数
 	~UPlantBase() = default;
-	
-	
-	
 
 #pragma region 植物属性
 	
@@ -69,13 +64,25 @@ class ASHFARM_API UPlantBase : public UObject
 	UPROPERTY(EditAnywhere,Category="植物|生长数据",meta=(DisplayName = "生长进度"))
 	float GrowthProgress =0.0f;
 	
-	//GrowthStage
+	//生长阶段
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="植物|生长数据",meta=(DisplayName = "生长阶段"))
 	EGrowthStage GrowthStage = EGrowthStage::Seeding;
 	
 	//成熟所需进度
 	UPROPERTY(EditAnywhere,Category="植物|生长数据",meta=(DisplayName = "成熟所需进度"))
 	float MatureProgress =100.0f;
+	
+	//逆境值（生长过程中，只要环境综合倍率(环境适应程度)低于 1.0（作物在受罪），就按差距累积逆境值：Stress += (1.0f - 环境倍率) × DeltaTime）
+	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="植物|生长数据",meta=(DisplayName = "逆境值"))
+	float Stress = 0.0f;
+	
+	//当前品质
+	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="植物|生长数据",meta=(DisplayName = "当前品质"))
+	EPlantQuality CurrentQuality = EPlantQuality::Premium;
+	
+	//敏感度（敏感度会影响逆境值，比如）
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="植物|生长数据",meta=(DisplayName = "敏感度"))
+	float Sensitivity = 1.0f;
 	
 	//是否成熟
 	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="植物|生长数据",meta=(DisplayName = "是否成熟"))
@@ -131,13 +138,6 @@ class ASHFARM_API UPlantBase : public UObject
 	
 	#pragma endregion
 	
-#pragma endregion 土壤属性
-
-//获取土壤类型文本
-UFUNCTION(BlueprintCallable,Category="土壤",meta=(DisplayName="获取土壤类型文本"))
-virtual FString GetSoilTypeText() const;//获取土壤类型文本 
-
-#pragma endregion 土壤属性
 	/**
 	 * 生长: 由种植床在 Tick 中调用, 传入当前土壤环境, 推进生长进度
 	 * @param DeltaTime			距离上一帧的时间 (秒)
@@ -159,11 +159,21 @@ virtual FString GetSoilTypeText() const;//获取土壤类型文本
 		UPARAM(DisplayName="辐射等级") int32 RadiationLevel,
 		UPARAM(DisplayName="毒性等级") float ToxicityLevel);
 	
+
+	//设置品质 根据逆境值来计算出品质 不需要参数
+	UFUNCTION(BlueprintCallable,Category="植物",meta=(DisplayName="设置品质"))
+	void SetPlantQuality();
+	
+	//获取品质文本
+	UFUNCTION(BlueprintCallable,Category="植物",meta=(DisplayName="获取品质文本"))
+	virtual FString GetQualityText() const ;
+	
+	
 	//当成熟时调用
 	UFUNCTION(BlueprintCallable,Category="植物",meta=(DisplayName="当成熟时"))
 	virtual void OnMature();
-	
 	virtual float EvaluateSoilQuality(EsoilQuality SoilQuality) const { return 1.0f; };//评估土壤品质
+	virtual float EvaluateSoilType(ESoilType SoilType) const { return 1.0f; };//评估土壤类型
 	virtual float EvaluateFertility(float Fertility) const { return 1.0f; };//评估土壤肥力
 	virtual float EvaluateMoisture(float Moisture) const { return 1.0f; };//评估土壤湿度
 	virtual float EvaluateTemperature(float Temperature) const { return 1.0f; };//评估环境温度

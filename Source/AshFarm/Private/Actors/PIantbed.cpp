@@ -121,7 +121,6 @@ void APIantbed::Tick(float DeltaTime)
     		//确保土壤肥力在最大肥力以下
     		SoilFertility = FMath::Clamp(SoilFertility,0.0f,MaxSoilFertility);
     	}
-	
 	SetMoistureLossPerSecond(DeltaTime);			//设置土壤水分流失率
 	
 	//植物生长与土壤消耗
@@ -146,7 +145,6 @@ void APIantbed::Tick(float DeltaTime)
 			//确保土壤湿度在最大土壤水分含量以下
 			Moisture = FMath::Clamp(Moisture,0.0f,MaxMoisture);
 		}
-
 		//土壤肥力消耗
 		if (SoilFertility >= 0.0f)//如果土壤肥力大于等于0
 		{
@@ -160,9 +158,6 @@ void APIantbed::Tick(float DeltaTime)
 		UpdatePlantMesh();
 	}
 	
-	
-	
-	
 	//更新土壤肥力状态
 	UpdateSoilQuality();
 	
@@ -170,17 +165,19 @@ void APIantbed::Tick(float DeltaTime)
 	DrawDebugString(
 		GetWorld(), 
 		TEXTLoaction,
-		FString::Printf(TEXT("种植床ID:%d \n 土壤肥力:%.f 土壤品质:%s ,土壤类型:%s  土壤湿度:%.f \n 当前作物:%s  当前文本的生长阶段:%s(进度：%f)\n"),
+		FString::Printf(TEXT("种植床ID:%d \n 土壤肥力:%.f 土壤品质:%s ,土壤类型:%s  土壤湿度:%.f \n 当前作物:%s ,当前文本的生长阶段:%s(进度：%f)，逆境值此刻为:(%.f),品质为:%s\n"),
 		BadID,
-		SoilFertility,
-		*GetSoilTypeText(),
-		*GetSoilQualityText(),
-		Moisture,
-		*CurrentPlant->GetPlantName(),
-		*CurrentPlant->GetGrowthStageText(),
-		CurrentPlant->GrowthProgress),
+		SoilFertility,//土壤肥力
+		*GetSoilTypeText(),//土壤类型
+		*GetSoilQualityText(),//土壤品质
+		Moisture,//土壤湿度
+		*CurrentPlant->GetPlantName(),//当前作物
+		*CurrentPlant->GetGrowthStageText(),//当前生长阶段
+		CurrentPlant->GrowthProgress,//当前进度
+		CurrentPlant->Stress,//当前逆境值
+		*CurrentPlant->GetQualityText()),//当前品质
 		nullptr,
-		FColor::White, 
+		FColor::White,
 		0.0f
 		);   //显示时间间隔为0.5秒
 }
@@ -210,7 +207,6 @@ void APIantbed::UpdatePlantMesh()
 		}
 	}
 }
-
 //获取生长速度
 float APIantbed::GetGrowthSpeed() const
 {
@@ -256,6 +252,7 @@ FString APIantbed::GetSoilTypeText()const
 {
 	switch (SoilType)
 	{
+	case ESoilType::Sand:
 		return TEXT("沙土");
 	case ESoilType::Loam:
 		return TEXT("粘土");
