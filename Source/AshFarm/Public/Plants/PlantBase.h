@@ -38,39 +38,27 @@ class ASHFARM_API UPlantBase : public UObject
 	//析构函数
 	~UPlantBase() = default;
 
-#pragma region 植物属性
+	//植物配置表
+	static TObjectPtr<UDataTable> PlantDataTable;//植物配置表
 	
-	//植物名称
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="植物", meta=(DisplayName="植物名称"))
-	FString PlantName;
 	
-	//生长速度
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="植物|生长数据",meta=(Displayname="生长速度"))
-	float GrowthSpeed= 1.0F;
 	
-	//每秒耗水量
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="植物|生长数据",meta=(Displayname="每秒耗水量"))
-	float WaterConsumption=0.01F;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="植物",meta=(DisplayName = "植物属性配置"))
+	FPlantConfig PlantConfig;
 	
-	//每秒肥料消耗
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="植物|生长数据",meta=(Displayname="每秒肥料消耗"))
-	float FertilityConsumption=0.01f;
+#pragma region 植物属性 Config
 	
-	//生长速度倍数
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="植物|生长数据",meta=(Displayname="生长速度倍数"))
-	float GrowthSpeedMulti = 1.0F;
+	//------------------------------------------------
+	// 运行时状态		RunTimeStatus
+	//------------------------------------------------
 	
 	//生长进度
 	UPROPERTY(EditAnywhere,Category="植物|生长数据",meta=(DisplayName = "生长进度"))
 	float GrowthProgress =0.0f;
 	
-	//生长阶段
+	//生长阶段 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="植物|生长数据",meta=(DisplayName = "生长阶段"))
 	EGrowthStage GrowthStage = EGrowthStage::Seeding;
-	
-	//成熟所需进度
-	UPROPERTY(EditAnywhere,Category="植物|生长数据",meta=(DisplayName = "成熟所需进度"))
-	float MatureProgress =100.0f;
 	
 	//逆境值（生长过程中，只要环境综合倍率(环境适应程度)低于 1.0（作物在受罪），就按差距累积逆境值：Stress += (1.0f - 环境倍率) × DeltaTime）
 	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="植物|生长数据",meta=(DisplayName = "逆境值"))
@@ -80,45 +68,24 @@ class ASHFARM_API UPlantBase : public UObject
 	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="植物|生长数据",meta=(DisplayName = "当前品质"))
 	EPlantQuality CurrentQuality = EPlantQuality::Premium;
 	
-	//敏感度（敏感度会影响逆境值，比如）
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="植物|生长数据",meta=(DisplayName = "敏感度"))
-	float Sensitivity = 1.0f;
-	
 	//是否成熟
 	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="植物|生长数据",meta=(DisplayName = "是否成熟"))
 	bool bIsMature = false;
 	
 #pragma endregion 植物属性
-	
-#pragma region 植物外观
-	
-	//幼苗期网格体：植物刚种下时显示的模型
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="植物|外观",meta=(DisplayName = "幼苗期网格体"))
-	TObjectPtr<UStaticMesh> SeedlingMesh;
-	
-	//成长期网格体：植物在成熟前的网格体
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="植物|外观",meta=(DisplayName = "成长期网格体"))
-	TObjectPtr<UStaticMesh> GrowthMesh;
-	
-	//开花期网格体：植物成熟后显示的模型
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="植物|外观",meta=(DisplayName = "开花期网格体"))
-	TObjectPtr<UStaticMesh> FlowerMesh;
-	
-	//成熟期网格体：bIsMature 变成 true 之后换上的模型
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="植物|外观",meta=(DisplayName = "成熟期网格体"))
-	TObjectPtr<UStaticMesh> MatureMesh;
-#pragma endregion		
 
 #pragma region 植物函数功能
+	void SetPlantQuality(const EPlantQuality Quality);//重设置植物品质
 	
 	//获取植物名称
 	UFUNCTION(BlueprintCallable,Category="植物",meta=(DisplayName="获取植物名称"))
-	virtual FString GetPlantName() const { return PlantName; }; 
+	virtual FString GetPlantName() const { return PlantConfig.PlantName; }; 
 	
-	//获取植物描述
+	//获取植物描述  后续的废弃的函数 原因是已经在PlantBedTypes.h中的plantconfig定义了
 	UFUNCTION(BlueprintCallable,Category="植物",meta=(DisplayName="获取植物描述"))
-	virtual FString GetDescription() const PURE_VIRTUAL(,return TEXT("一种灰烬时代的作物");); 
-	//定义的基础类，其他字类可以重写这个函数必须不能和他的text文字一致
+	virtual FText GetDescription() const {return  PlantConfig.Description;}; 
+	/* PURE_VIRTUAL(,return TEXT("一种灰烬时代的作物"););*/ 
+	//定义的基础类，其他字类可以重写这个函数必须不能和他的text文字一致*/
 	 
 	//根据生长进度更新网格体
 	UFUNCTION(BlueprintCallable,Category="植物",meta=(DisplayName="根据生长进度更新网格体"))
@@ -151,23 +118,15 @@ class ASHFARM_API UPlantBase : public UObject
 	UFUNCTION(BlueprintCallable,Category="植物",meta=(DisplayName="生长"))
 	virtual void Grow(  
 		UPARAM(DisplayName="帧间隔时间") float DeltaTime,
-		UPARAM(DisplayName="土壤品质") EsoilQuality SoilQuality,
-		UPARAM(DisplayName="土壤类型") ESoilType SoilType,
-		UPARAM(DisplayName="土壤肥力") float Fertility,
-		UPARAM(DisplayName="土壤湿度") float Moisture,
-		UPARAM(DisplayName="环境温度") float Temperature,
-		UPARAM(DisplayName="辐射等级") int32 RadiationLevel,
-		UPARAM(DisplayName="毒性等级") float ToxicityLevel);
-	
-
+		const FPlantGrowthContext& Context);
+	//生长 不加const 的话会直接修改原来的数据&管的是"要不要拷贝"，const 管的是"能不能改" &是为了不拷贝 const 是为了不许改（只读输入）const& = 不拷贝 + 不许改
+		
 	//设置品质 根据逆境值来计算出品质 不需要参数
-	UFUNCTION(BlueprintCallable,Category="植物",meta=(DisplayName="设置品质"))
 	void SetPlantQuality();
 	
 	//获取品质文本
 	UFUNCTION(BlueprintCallable,Category="植物",meta=(DisplayName="获取品质文本"))
 	virtual FString GetQualityText() const ;
-	
 	
 	//当成熟时调用
 	UFUNCTION(BlueprintCallable,Category="植物",meta=(DisplayName="当成熟时"))

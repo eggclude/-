@@ -37,7 +37,7 @@ public:
 	
 	//Bad id
 	UPROPERTY(EditInstanceOnly,BlueprintReadWrite,Category="种植床",meta=(DisplayName="种植床ID"))
-	int32 BadID = 0;
+	int32 BadID = 0; // 无效的种植床ID
 	
 	//Uint8 : 无符号8位整数
 	//int16 : 16位整数
@@ -89,7 +89,7 @@ public:
 	
 	//毒性等级
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="土壤",meta=(DisplayName = "毒性等级"))
-	float ToxicityLevel = 0.0f;
+	float Toxicity = 0.0f;
 	
 	// 获取土壤肥力
 	UFUNCTION(BlueprintCallable,Category="土壤",meta=(DisplayName = "获取土壤肥力"))
@@ -136,8 +136,6 @@ public:
 	//TODO 还没实现,先注释掉,否则 UHT 生成的代码会因为找不到函数体而链接失败
 	//UFUNCTION(BlueprintCallable,Category="土壤",meta=(DisplayName="设置土壤状态"))
 	//void SetSoilQuality(EsoilQuality Quality);
-		
-	
 	
 	//构造函数
 	//OnConstruction 构造函数，当实例化时调用,类似于构造函数() 每次拖动或者修改值时调用
@@ -153,7 +151,7 @@ public:
 	
 	//获取所有ApiantBed实例的数量
 	UFUNCTION(BlueprintCallable,Category="统计",meta=(DisplayName="获取所有ApiantBed实例的数量"))
-	static  int32 GetTotalCount();
+	static int32 GetTotalCount(); //
 	
 	
 	#pragma region 土壤状态机
@@ -216,7 +214,6 @@ private:
 	//统计所有Plant Bad的实例的数量
 	static  int32 TotalCount;
 	//private 私有，下面的函数智能在本类内部调用
-	
 	
 };
 //张三的属性 外貌等都需要在public写入 需要从外部调用的都写在里面

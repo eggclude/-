@@ -7,32 +7,18 @@
 //构造函数
 UAshCorn::UAshCorn()
 {
-	PlantName = TEXT("灰烬玉米");
-	GrowthSpeed = 2.0f;
+	PlantConfig.PlantName = TEXT("灰烬玉米");
+	PlantConfig.GrowthSpeed = 2.0f;
 	//水损耗0.5f
-	WaterConsumption = 0.02f;
-	FertilityConsumption = 0.02f;
-	MatureProgress = 80.0f;
-}
-
-
-//重写植物描述
-FString UAshCorn::GetDescription() const { 
-	return TEXT("灰烬玉米，最基础的作物，哪里都可以种"); 
+	PlantConfig.WaterConsumption = 0.02f;
+	PlantConfig.FertilityConsumption = 0.02f;
+	PlantConfig.MatureProgress = 80.0f;
 }
 //生长
-void UAshCorn::Grow(
-	  float DeltaTime,
-	  EsoilQuality SoilQuality,
-	  ESoilType SoilType,
-	  float Fertility,
-	  float Moisture,
-	  float Temperature,
-	  int32 RadiationLevel,
-	  float ToxicityLevel)
+void UAshCorn::Grow(float DeltaTime,const FPlantGrowthContext& Context)
 {
 	//调用基类的生长函数
-	Super::Grow(DeltaTime, SoilQuality, SoilType,Fertility, Moisture, Temperature, RadiationLevel, ToxicityLevel);
+	Super::Grow(DeltaTime,Context);
 }
 
 //成熟

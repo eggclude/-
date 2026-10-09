@@ -7,8 +7,10 @@
 #include "UObject/ConstructorHelpers.h"
 #include "DrawDebugHelpers.h"
 
+TObjectPtr<UDataTable> UPlantBase::PlantDataTable = nullptr;// 植物配置表初始化
+
 //初始化静态变量
-int32 APIantbed::TotalCount = 0;
+int32 APIantbed::TotalCount = 0;// 种植床总数
 // Sets default values
 //构造函数
 APIantbed::APIantbed()
@@ -25,8 +27,7 @@ APIantbed::APIantbed()
 	MaxMoisture = 1.0f; // 最大土壤水分含量
 	Temperature = 26.0f; // 土壤温度
 	RadiationLevel = 0; // 辐射等级
-	RadiationLevel = 0; // 辐射等级
-	ToxicityLevel = 0; // 毒性等级
+	Toxicity = 0; // 毒性等级
 	Root = CreateDefaultSubobject<USceneComponent>("Root");
 	SetRootComponent(Root);
 	
@@ -126,22 +127,25 @@ void APIantbed::Tick(float DeltaTime)
 	//植物生长与土壤消耗
 	if (CurrentPlant != nullptr)//首先判断是不是指针
 	{
+		//构建生长环境上下文
+		FPlantGrowthContext Context;//局部变量
+		
+		Context.SoilQuality = SoilQuality;
+		Context.SoilType = SoilType;
+		Context.Fertility = SoilFertility;
+		Context.Moisture = Moisture;
+		Context.Temperature = Temperature;
+		Context.RadiationLevel = RadiationLevel;
+		Context.Toxicity = Toxicity;
+			
 		//调用植物的生长函数 并传递Grow内参数运行
-		CurrentPlant->Grow(
-			DeltaTime,
-			SoilQuality,
-			SoilType,
-			SoilFertility,
-			Moisture,
-			Temperature,
-			RadiationLevel,
-			ToxicityLevel);
+		CurrentPlant->Grow(DeltaTime,Context);
 
 		//土壤水分消耗
 		if (Moisture >= 0.0f)//如果土壤湿度大于等于0
 		{
 			//开始耗水
-			Moisture -= CurrentPlant->WaterConsumption * DeltaTime;
+			Moisture -= CurrentPlant->PlantConfig.WaterConsumption * DeltaTime;//土壤湿度-每秒耗水量*时间间隔
 			//确保土壤湿度在最大土壤水分含量以下
 			Moisture = FMath::Clamp(Moisture,0.0f,MaxMoisture);
 		}
@@ -149,7 +153,7 @@ void APIantbed::Tick(float DeltaTime)
 		if (SoilFertility >= 0.0f)//如果土壤肥力大于等于0
 		{
 			//开始耗肥
-			SoilFertility -= CurrentPlant->FertilityConsumption * DeltaTime;
+			SoilFertility -= CurrentPlant->PlantConfig.FertilityConsumption * DeltaTime;
 			//确保土壤肥力在最大肥力以下
 			SoilFertility = FMath::Clamp(SoilFertility,0.0f,MaxSoilFertility);
 		}
@@ -157,15 +161,13 @@ void APIantbed::Tick(float DeltaTime)
 		//设置网格体
 		UpdatePlantMesh();
 	}
-	
 	//更新土壤肥力状态
 	UpdateSoilQuality();
-	
 	FVector TEXTLoaction= GetActorLocation()+FVector(0,0,100.0f);  //土壤肥力文本位置，FVector(0,0,1 00.0f) 表示在当前位置的上方
 	DrawDebugString(
 		GetWorld(), 
 		TEXTLoaction,
-		FString::Printf(TEXT("种植床ID:%d \n 土壤肥力:%.f 土壤品质:%s ,土壤类型:%s  土壤湿度:%.f \n 当前作物:%s ,当前文本的生长阶段:%s(进度：%f)，逆境值此刻为:(%.f),品质为:%s\n"),
+		FString::Printf(TEXT("种植床ID:%d \n 土壤肥力:%.f ,土壤类型:%s，土壤品质:%s , 土壤湿度:%.f \n 当前作物:%s ,当前文本的生长阶段:%s(进度：%f)，逆境值此刻为:(%.f),品质为:%s\n"),
 		BadID,
 		SoilFertility,//土壤肥力
 		*GetSoilTypeText(),//土壤类型
@@ -255,9 +257,9 @@ FString APIantbed::GetSoilTypeText()const
 	case ESoilType::Sand:
 		return TEXT("沙土");
 	case ESoilType::Loam:
-		return TEXT("粘土");
+		return TEXT("泥土");
 	case ESoilType::Clay:
-		return TEXT("粘土");
+		return TEXT("黏土");
 	default:
 		return TEXT("未知");
 	}
@@ -277,7 +279,8 @@ int32 APIantbed::GetTotalCount()
  void APIantbed::UpdateSoilQuality()
 {
 	EsoilQuality NewQuality;
-	
+	//初始化局部变量
+	NewQuality = SoilQuality;
 	//todo: 实现土壤肥力状态
 	//土壤肥力状态判断
 	//土壤肥力低于贫瘠阈值，为贫瘠
@@ -294,7 +297,7 @@ int32 APIantbed::GetTotalCount()
 		NewQuality = EsoilQuality::Saline;
 	}
 	//土壤肥力高于肥沃阈值，为肥沃
-	else 
+	else if (SoilFertility > plantBedDefaults::FERTILITY_FERTILE_THRESHOLD)
 	{
 		NewQuality = EsoilQuality::Fertlie;
 	}

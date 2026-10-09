@@ -7,14 +7,9 @@
 UAshPotato::UAshPotato()
 {
 	//初始化属性
-	PlantName = TEXT("灰烬土豆");
-	WaterConsumption = 0.025f;
-	GrowthSpeed = 0.8f;
-}
-//重写植物描述
-FString UAshPotato::GetDescription() const
-{
-	return TEXT("这是灰烬土豆是一种在灰烬土壤生长的土豆");
+	PlantConfig.PlantName = TEXT("灰烬土豆");
+	PlantConfig.WaterConsumption = 0.025f;
+	PlantConfig.GrowthSpeed = 0.8f;
 }
 
 //评估肥力等级

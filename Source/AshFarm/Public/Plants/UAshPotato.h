@@ -18,9 +18,7 @@ public:
 	//先敲构造函数
 
 	UAshPotato();//默认构造函数
-
-	//重写植物描述
-	virtual FString GetDescription() const override;
+	
 	//重写肥力等级
 	virtual float EvaluateFertility(float Fertility) const override;
 	//重写湿度等级
