@@ -65,7 +65,7 @@ struct FPlantGrowthContext//FPlantGrowth植物生长环境 上下文(context)/�
 	float LightIntensity = 0.5f;
 };
 
-
+//植物配置
 USTRUCT(Blueprintable,meta=(DisplayName="植物配置"))
 struct FPlantConfig: public FTableRowBase//植物配置
 	{

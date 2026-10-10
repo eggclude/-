@@ -6,7 +6,44 @@
 //析构函数
 /*UPlantBase::~UPlantBase() = default;*/
 
+//初始化植物数据表变量
+TObjectPtr<UDataTable> UPlantBase::PlantDataTable = nullptr;// 植物配置表初始化
+//PostInitProperties 当构造函数完成后调用，用于初始化属性
+void UPlantBase::PostInitProperties()
+{
+	//调用父类的PostInitProperties方法
+	Super::PostInitProperties();
+	//加载植物配置数据表
+	LoadPlantDataTable();
+}
 
+//加载植物配置表LoadPlantDataTable
+void UPlantBase::LoadPlantDataTable()
+{
+	//加载植物配置表
+	UPlantBase::PlantDataTable = LoadObject<UDataTable>(nullptr, TEXT("/Game/0_/Plants/DT_Plants.DT_Plants"));
+	//如果加载失败，输出错误信息
+	if (!UPlantBase::PlantDataTable)
+	{
+		UE_LOG(A_LogAshFarm,Error,TEXT("加载植物配置表失败"));
+	}
+	else
+	{
+		UE_LOG(A_LogAshFarm,Warning,TEXT("加载植物配置表成功"));
+	}
+}
+//通过RowName从植物配置表加载到植物属性中
+bool UPlantBase::LoadFromPlantDataTable()
+{
+	if (!UPlantBase::PlantDataTable)
+	{
+		UE_LOG(LogTemp,Warning,TEXT("植物配置数据表未加载"));
+		return false;
+	}
+	FPlantConfig FoundRow =UPlantBase::PlantDataTable->FindRow<FPlantConfig>(RowName);
+}
+//TObjectPtr 植物配置表指针 
+//设置生长阶段
 void UPlantBase::SetGrowthStage()
 {
 	float GrowthProgressRation = GrowthProgress / PlantConfig.MatureProgress;

@@ -37,12 +37,37 @@ class ASHFARM_API UPlantBase : public UObject
 	UPlantBase() = default;
 	//析构函数
 	~UPlantBase() = default;
-
+	
+	//PostInitProperties 当构造结束或完成后调用，用于初始化属性
+	virtual void PostInitProperties() override;
+	
+	//------------------------------------------------
+	// 植物配置表		PlantDataTable
+	//------------------------------------------------
+	
 	//植物配置表
-	static TObjectPtr<UDataTable> PlantDataTable;//植物配置表
+	static TObjectPtr<UDataTable> PlantDataTable;//植物配置表 
+	//加载植物配置表 UDataTable 植物配置表指针 PlantDataTable 初始化为 nullptr
+	static void LoadPlantDataTable();//加载静态植物配置表 用LoadPlantDataTable加载PlantDataTable文件
+		
+	//RowName加载植物配置表数据
+	bool LoadFromPlantDataTable();//从行命名RowName加载植物配置表数据
+	{
+		if (!UPlantBase::PlantDataTable)
+		{
+			UE_LOG(LogTemp,Warning,TEXT("植物配置数据表未加载"));
+			return false;
+		}
+		
+	}
+	//------------------------------------------------
+	// 植物属性配置	PlantConfig
+	//------------------------------------------------
 	
-	
-	
+	//行命名：RowName
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="植物",meta=(DisplayName = "行命名"))
+	FName RowName;//植物名称
+	//植物属性配置 PlantConfig
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="植物",meta=(DisplayName = "植物属性配置"))
 	FPlantConfig PlantConfig;
 	
