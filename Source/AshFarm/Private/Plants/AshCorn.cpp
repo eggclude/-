@@ -7,12 +7,7 @@
 //构造函数
 UAshCorn::UAshCorn()
 {
-	PlantConfig.PlantName = TEXT("灰烬玉米");
-	PlantConfig.GrowthSpeed = 2.0f;
-	//水损耗0.5f
-	PlantConfig.WaterConsumption = 0.02f;
-	PlantConfig.FertilityConsumption = 0.02f;
-	PlantConfig.MatureProgress = 80.0f;
+
 }
 //生长
 void UAshCorn::Grow(float DeltaTime,const FPlantGrowthContext& Context)
@@ -67,3 +62,4 @@ float UAshCorn::EvaluateFertility(float Fertility) const
 	return 1.0f;
 }
 //评估土壤肥力等级
+

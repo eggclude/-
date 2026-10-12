@@ -7,8 +7,7 @@
 //构造函数
 URadiationCactus::URadiationCactus()
 {
-	PlantConfig.PlantName = TEXT("辐射仙人掌");
-	PlantConfig.WaterConsumption = 0.005f;//耗水
+	RowName = TEXT("辐射仙人掌");
 }
 //重写评估土壤类型
 float URadiationCactus::EvaluateSoilType(ESoilType SoilType) const

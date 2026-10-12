@@ -6,10 +6,7 @@
 
 UAshPotato::UAshPotato()
 {
-	//初始化属性
-	PlantConfig.PlantName = TEXT("灰烬土豆");
-	PlantConfig.WaterConsumption = 0.025f;
-	PlantConfig.GrowthSpeed = 0.8f;
+
 }
 
 //评估肥力等级

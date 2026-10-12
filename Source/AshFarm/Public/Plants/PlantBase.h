@@ -41,6 +41,9 @@ class ASHFARM_API UPlantBase : public UObject
 	//PostInitProperties 当构造结束或完成后调用，用于初始化属性
 	virtual void PostInitProperties() override;
 	
+	//PostEditChangeProperty 当属性值改变时调用，用于更新属性值
+	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
+	
 	//------------------------------------------------
 	// 植物配置表		PlantDataTable
 	//------------------------------------------------
@@ -52,14 +55,6 @@ class ASHFARM_API UPlantBase : public UObject
 		
 	//RowName加载植物配置表数据
 	bool LoadFromPlantDataTable();//从行命名RowName加载植物配置表数据
-	{
-		if (!UPlantBase::PlantDataTable)
-		{
-			UE_LOG(LogTemp,Warning,TEXT("植物配置数据表未加载"));
-			return false;
-		}
-		
-	}
 	//------------------------------------------------
 	// 植物属性配置	PlantConfig
 	//------------------------------------------------

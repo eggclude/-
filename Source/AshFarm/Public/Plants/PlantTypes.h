@@ -13,6 +13,10 @@ namespace PlantDefaults
 	const float QUALITY_WITHERED_THRESHOLD = 30.0f;	//干瘪阈值
 	
 }
+//选择配置参数
+
+
+
 
 USTRUCT(BlueprintType)//结构体
 struct FPlantGrowthContext//FPlantGrowth植物生长环境 上下文(context)/参数(Params)
@@ -64,11 +68,42 @@ struct FPlantGrowthContext//FPlantGrowth植物生长环境 上下文(context)/�
 	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="植物|生长环境",meta=(DisplayName="环境光照强度",ClampMin="0",ClampMax="1"))
 	float LightIntensity = 0.5f;
 };
+USTRUCT(BlueprintType,meta=(DisplayName="植物环境值范围"))//结构体   //温度范围  水分范围  肥料范围  光照强度范围  风速范围  辐射等级范围  毒度等级范围 
+//植物范围
+struct FPlantRange
+{
+	GENERATED_BODY()
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="植物|生长环境",meta=(DisplayName="环境最小值"))
+	float Min =0;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="植物|生长环境",meta=(DisplayName="环境最优最小值"))
+	float OptimalMin = 0.4f;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="植物|生长环境",meta=(DisplayName="环境最优最大值"))
+	float OptimalMax = 0.6f;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="植物|生长环境",meta=(DisplayName="环境最大值"))
+	float Max = 1;
+	
+	float Evaluate(float Value) const
+	{
+		if(Value<Min)
+		{
+			return 0;
+		}
+		else if(Value>OptimalMax)
+		{
+			return 1;
+		}
+		if(Value>OptimalMin && Value<=OptimalMax)
+		{
+			return 0.5;
+		}
+	}
+};
+
 
 //植物配置
 USTRUCT(Blueprintable,meta=(DisplayName="植物配置"))
 struct FPlantConfig: public FTableRowBase//植物配置
-	{
+{
 	GENERATED_BODY()
 	/*配置Config*/
 	
@@ -154,4 +189,5 @@ enum class EPlantQuality: uint8
 	Normal		UMETA(DisplayName="普通"),
 	Withered	UMETA(DisplayName="干瘪"),
 };
+
 

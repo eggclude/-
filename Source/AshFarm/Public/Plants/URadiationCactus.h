@@ -9,7 +9,7 @@
 /**
  * 
  */
-UCLASS()
+UCLASS(Blueprintable,meta=(DisplayName="辐射仙人掌"))
 class ASHFARM_API URadiationCactus : public UPlantBase
 {
 	GENERATED_BODY()

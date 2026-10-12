@@ -15,7 +15,26 @@ void UPlantBase::PostInitProperties()
 	Super::PostInitProperties();
 	//加载植物配置数据表
 	LoadPlantDataTable();
+	//从植物配置表加载到植物属性中
+	LoadFromPlantDataTable();
 }
+//
+void UPlantBase::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
+{
+	//调用父类的PostEditChangeProperty方法 因为是他继承的UObject
+	Super::PostEditChangeProperty(PropertyChangedEvent);
+	
+	// Name_None 为fname的空值
+	//当RowName不为空值时，从植物配置表加载到植物属性中
+	if (RowName!=NAME_None)
+	{
+		//加载植物配置数据表
+		LoadPlantDataTable();
+		//从植物配置表加载到植物属性中
+		LoadFromPlantDataTable();
+	}
+}
+
 
 //加载植物配置表LoadPlantDataTable
 void UPlantBase::LoadPlantDataTable()
@@ -37,10 +56,27 @@ bool UPlantBase::LoadFromPlantDataTable()
 {
 	if (!UPlantBase::PlantDataTable)
 	{
-		UE_LOG(LogTemp,Warning,TEXT("植物配置数据表未加载"));
+		UE_LOG(A_LogAshFarm,Warning,TEXT("植物配置数据表未加载"));
 		return false;
 	}
-	FPlantConfig FoundRow =UPlantBase::PlantDataTable->FindRow<FPlantConfig>(RowName);
+	
+//根据RowName查找植物配置行 FPlantConfig*指针是为了找到数据表中间某一行的内存地址  FPlantConfig*是指针 *加到前面是把指针变回数据
+	FPlantConfig* FoundRow = UPlantBase::PlantDataTable->FindRow<FPlantConfig>(RowName,TEXT(""));
+	//重要*
+	
+	
+	
+	if (!FoundRow)
+	{
+		UE_LOG(A_LogAshFarm,Warning,TEXT("未找到植物配置行"));
+		return false;
+	}
+	UE_LOG(A_LogAshFarm, Warning, TEXT("表加载前GrowthSpeed=%.2f"), PlantConfig.GrowthSpeed);//输出加载前的生长速度
+	//将找到的植物配置行赋值给植物属性
+	PlantConfig = *FoundRow;
+	UE_LOG(A_LogAshFarm, Warning, TEXT("表加载后GrowthSpeed=%.2f"), PlantConfig.GrowthSpeed);//输出加载后的生长速度
+	UE_LOG(A_LogAshFarm,Warning,TEXT("植物配置表:加载成功,已找到行命名:%s,生长速度：%.2f"),*RowName.ToString(),PlantConfig.GrowthSpeed);
+	return true;
 }
 //TObjectPtr 植物配置表指针 
 //设置生长阶段
@@ -162,18 +198,22 @@ UStaticMesh* UPlantBase::GetStageMesh() const
 	switch (GrowthStage)
 	{
 	case EGrowthStage::Seeding:
-		return PlantConfig.SeedlingMesh.Get();//生长进度小于等于阈值，返回种苗子网格体
+		return PlantConfig.SeedlingMesh.LoadSynchronous();//生长进度小于等于阈值，返回种苗子网格体 LoadSynchronous同步加载
 		//小于花期长期返回增长网格体
 	case EGrowthStage::Growing:
-		return PlantConfig.GrowthMesh.Get();//生长进度小于花期长期阈值，返回增长网格体
+		return PlantConfig.GrowthMesh.LoadSynchronous();//生长进度小于花期长期阈值，返回增长网格体
 		//小于成熟期返回开花网格体
 	case EGrowthStage::Flowering:
-		return PlantConfig.FlowerMesh.Get();//生长进度小于成熟期阈值，返回开花网格体
+		return PlantConfig.FlowerMesh.LoadSynchronous();//生长进度小于成熟期阈值，返回开花网格体
 		//大于等于成熟阈值返回成熟网格体
+	case EGrowthStage::Mature:
+		return PlantConfig.MatureMesh.LoadSynchronous();//生长进度大于等于成熟阈值，返回成熟网格体 LoadSynchronous同步加载
+	
 	default:
-		return nullptr;//生长进度大于等于成熟阈值，返回成熟网格体
+		return nullptr;
 	}
 }
+	
 void UPlantBase::OnMature()
 {
 	UE_LOG(A_LogAshFarm, Warning, TEXT("植物名称：%s，植物成熟"), *GetPlantName());
