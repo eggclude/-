@@ -78,6 +78,21 @@ bool UPlantBase::LoadFromPlantDataTable()
 	UE_LOG(A_LogAshFarm,Warning,TEXT("植物配置表:加载成功,已找到行命名:%s,生长速度：%.2f"),*RowName.ToString(),PlantConfig.GrowthSpeed);
 	return true;
 }
+
+//获取所有植物名称(提供给编辑器下拉菜单使用)
+
+TArray<FName> UPlantBase::GetPlantNames() const //获取所有植物名称
+{
+	TArray<FName> PlantNames;
+	if (UPlantBase::PlantDataTable)//如果植物配置表已加载
+	{
+		PlantNames =  UPlantBase::PlantDataTable->GetRowNames();//获取所有植物名称
+	}
+	return PlantNames;
+}
+
+
+
 //TObjectPtr 植物配置表指针 
 //设置生长阶段
 void UPlantBase::SetGrowthStage()
@@ -131,15 +146,18 @@ void UPlantBase::Grow(float DeltaTime,const FPlantGrowthContext& Context)
 	{
 		return;
 	}
+	TotalGrowthTime += DeltaTime;
 	//综合评估倍率 
-	float EvaluatedMulti = EvaluateSoilQuality(Context.SoilQuality)
-	*	EvaluateSoilType(Context.SoilType)				//评估土壤类型
-	*	EvaluateSoilQuality(Context.SoilQuality) 		//评估土壤品质
-	*	EvaluateFertility(Context.Fertility) 			//评估土壤肥力
-	*	EvaluateMoisture(Context.Moisture) 				//评估土壤湿度
-	*	EvaluateTemperature(Context.Temperature) 		//评估环境温度
-	*	EvaluateRadiation(Context.RadiationLevel) 		//评估辐射等级
-	*	EvaluateToxicity(Context.Toxicity) ;		//评估毒性等级
+	float EvaluatedMulti = 
+			EvaluateSoilType(Context.SoilType)				//评估土壤类型
+		*	EvaluateSoilQuality(Context.SoilQuality) 		//评估土壤品质
+		*	EvaluateFertility(Context.Fertility) 			//评估土壤肥力
+		*	EvaluateMoisture(Context.Moisture) 				//评估土壤湿度
+		*	EvaluateTemperature(Context.Temperature) 		//评估环境温度
+		*	EvaluateRadiation(Context.RadiationLevel) 		//评估辐射等级
+		*	EvaluateToxicity(Context.Toxicity) 			//评估毒性等级
+		*	EvaluateWindSpeed(Context.WindSpeed) 			//评估风速等级
+		*	EvaluateLightIntensity(Context.LightIntensity);	//评估光照强度
 
 	//逆境累计
 if (EvaluatedMulti < 1.0f)
@@ -218,3 +236,42 @@ void UPlantBase::OnMature()
 {
 	UE_LOG(A_LogAshFarm, Warning, TEXT("植物名称：%s，植物成熟"), *GetPlantName());
 }
+
+
+//计算收货产量
+float UPlantBase::CalculateHarvest() const
+{
+	if (GrowthStage == EGrowthStage::Dead)
+	{
+		return 0.0f;//死亡不收获
+	}
+	//计算品质倍率
+	float QualityMulti = 1.0f;
+	switch (CurrentQuality)
+	{
+	case EPlantQuality::Premium:
+		QualityMulti = PlantDefaults::EPlant_Quality_PREMIUM;//优质品质倍率
+		break;
+	case EPlantQuality::Normal:
+		QualityMulti = PlantDefaults::EPlant_Quality_NORMAL;//普通品质倍率
+		break;
+	case EPlantQuality::Withered:
+		QualityMulti = PlantDefaults::EPlant_Quality_WITHERED;//干扁品质倍率
+		break;
+	default:
+		break;
+	}
+	return PlantConfig.BaseHarvestAmount*QualityMulti ;//BaseHarvestAmount 基础产量 * 品质倍率
+	
+}
+
+//记录植物从种植到成熟的总时长
+//每次 Grow 累加 DeltaTime 到TotalGrowthTime
+float UPlantBase::GetTotalGrowthTime() const
+{
+	if (CurrentQuality == EPlantQuality::Premium)//优质品质
+	{
+		return TotalGrowthTime;
+	}
+}
+

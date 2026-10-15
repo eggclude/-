@@ -60,11 +60,14 @@ class ASHFARM_API UPlantBase : public UObject
 	//------------------------------------------------
 	
 	//行命名：RowName
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="植物",meta=(DisplayName = "行命名"))
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="植物",meta=(DisplayName = "行命名",GetOptions="GetPlantNames"))
 	FName RowName;//植物名称
 	//植物属性配置 PlantConfig
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="植物",meta=(DisplayName = "植物属性配置"))
 	FPlantConfig PlantConfig;
+	//获取所有植物名称(提供给编辑器下拉菜单使用)
+	UFUNCTION(CallInEditor)
+	TArray<FName> GetPlantNames() const;//TArray<FName> 很多植物名称数组 GetPlantNames 获取所有植物名称 const 写进去证明他是个常量
 	
 #pragma region 植物属性 Config
 	
@@ -76,8 +79,12 @@ class ASHFARM_API UPlantBase : public UObject
 	UPROPERTY(EditAnywhere,Category="植物|生长数据",meta=(DisplayName = "生长进度"))
 	float GrowthProgress =0.0f;
 	
+	// 总生长时间
+	UPROPERTY(EditAnywhere,Category="植物|生长数据",meta=(DisplayName = "总生长时间"))
+	float TotalGrowthProgress =0.0f;
+	
 	//生长阶段 
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="植物|生长数据",meta=(DisplayName = "生长阶段"))
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="植物|生长数据",meta=(DisplayName = "生长阶段"))
 	EGrowthStage GrowthStage = EGrowthStage::Seeding;
 	
 	//逆境值（生长过程中，只要环境综合倍率(环境适应程度)低于 1.0（作物在受罪），就按差距累积逆境值：Stress += (1.0f - 环境倍率) × DeltaTime）
@@ -92,8 +99,11 @@ class ASHFARM_API UPlantBase : public UObject
 	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="植物|生长数据",meta=(DisplayName = "是否成熟"))
 	bool bIsMature = false;
 	
+	
+	
+	
 #pragma endregion 植物属性
-
+	
 #pragma region 植物函数功能
 	void SetPlantQuality(const EPlantQuality Quality);//重设置植物品质
 	
@@ -122,6 +132,10 @@ class ASHFARM_API UPlantBase : public UObject
 	//获取生长阶段文本
 	UFUNCTION(Blueprintable,Category="植物",meta=(DisplayName="获取生长阶段文本")) 
 	virtual FString GetGrowthStageText() const;//获取生长阶段文本 
+	
+	//计算收获量
+	UFUNCTION(BlueprintCallable,Category="植物",meta=(DisplayName="计算收获量"))
+	virtual float CalculateHarvest() const;
 	
 	#pragma endregion
 	
@@ -152,12 +166,24 @@ class ASHFARM_API UPlantBase : public UObject
 	UFUNCTION(BlueprintCallable,Category="植物",meta=(DisplayName="当成熟时"))
 	virtual void OnMature();
 	virtual float EvaluateSoilQuality(EsoilQuality SoilQuality) const { return 1.0f; };//评估土壤品质
-	virtual float EvaluateSoilType(ESoilType SoilType) const { return 1.0f; };//评估土壤类型
-	virtual float EvaluateFertility(float Fertility) const { return 1.0f; };//评估土壤肥力
-	virtual float EvaluateMoisture(float Moisture) const { return 1.0f; };//评估土壤湿度
-	virtual float EvaluateTemperature(float Temperature) const { return 1.0f; };//评估环境温度
-	virtual float EvaluateRadiation(int32 RadiationLevel) const { return 1.0f; };//评估辐射等级
-	virtual float EvaluateToxicity(float ToxicityLevel) const{return 1.0f; };//评估毒性等级
+	//PlantConfig.PreferredSoilType == SoilType ? 1.2f : 1.0f; //偏好土壤类型 1.2f 否则 1.0f ?三元表达式 如果是偏好土壤类型 则返回前面的1.2f 否则返回后面的1.0f
+	virtual float EvaluateSoilType(ESoilType SoilType) const { return PlantConfig.PreferredSoilType == SoilType ? 1.2f : 1.0f; };//评估土壤类型
+	
+	virtual float EvaluateFertility(float Fertility) const { return PlantConfig.FertilityRange.Evaluate(Fertility); };//评估土壤肥力
+	
+	virtual float EvaluateMoisture(float Moisture) const { return PlantConfig.MoistureRange.Evaluate(Moisture); };//评估土壤湿度
+	
+	virtual float EvaluateTemperature(float Temperature) const { return PlantConfig.TemperatureRange.Evaluate(Temperature); };//评估环境温度
+	
+	virtual float EvaluateRadiation(int32 RadiationLevel) const { return PlantConfig.RadiationRange.Evaluate(RadiationLevel); };//评估辐射等级
+	
+	virtual float EvaluateToxicity(float ToxicityLevel) const{return PlantConfig.ToxicityRange.Evaluate(ToxicityLevel); };//评估毒性等级
+	
+	virtual float EvaluateWindSpeed(float WindSpeed) const { return PlantConfig.WindSpeedRange.Evaluate(WindSpeed); };//评估风速等级
+	
+	virtual float EvaluateLightIntensity(float lightIntensity)const {return PlantConfig.LightIntensityRange.Evaluate(lightIntensity); };//评估光照强度
+	
+	
 };
 	
 	

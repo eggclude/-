@@ -12,6 +12,9 @@ namespace PlantDefaults
 	const float QUALITY_NORMAL_THRESHOLD = 15.0f;	//普通阈值
 	const float QUALITY_WITHERED_THRESHOLD = 30.0f;	//干瘪阈值
 	
+	const float EPlant_Quality_PREMIUM = 1.2f;	//优质倍率
+	const float EPlant_Quality_NORMAL = 1.0f;	//普通倍率
+	const float EPlant_Quality_WITHERED = 0.5f; //干扁倍率
 }
 //选择配置参数
 
@@ -60,7 +63,6 @@ struct FPlantGrowthContext//FPlantGrowth植物生长环境 上下文(context)/�
 	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="植物|生长环境",meta=(DisplayName="环境毒度等级"))
 	float Toxicity = 0.0f;
 	
-	
 	//环境数据
 	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="植物|生长环境",meta=(DisplayName="环境风速",ClampMin="0",ClampMax="10"))
 	float WindSpeed = 0.0f;
@@ -68,7 +70,7 @@ struct FPlantGrowthContext//FPlantGrowth植物生长环境 上下文(context)/�
 	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="植物|生长环境",meta=(DisplayName="环境光照强度",ClampMin="0",ClampMax="1"))
 	float LightIntensity = 0.5f;
 };
-USTRUCT(BlueprintType,meta=(DisplayName="植物环境值范围"))//结构体   //温度范围  水分范围  肥料范围  光照强度范围  风速范围  辐射等级范围  毒度等级范围 
+USTRUCT(BlueprintType,meta=(DisplayName="植物环境值范围"))//结构体 //温度范围 水分范围 肥料范围 光照强度范围 风速范围 辐射等级范围 毒度等级范围 
 //植物范围
 struct FPlantRange
 {
@@ -81,21 +83,47 @@ struct FPlantRange
 	float OptimalMax = 0.6f;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="植物|生长环境",meta=(DisplayName="环境最大值"))
 	float Max = 1;
-	
-	float Evaluate(float Value) const
+	//评估环境值
+	//结构体内不能使用UFUNCTION
+	float Evaluate(float Value)const
 	{
-		if(Value<Min)
+		if (Value < Min || Value > Max)//如果环境值超出范围
 		{
-			return 0;
+			return 0.0F;//完全不生长
 		}
-		else if(Value>OptimalMax)
+		if (Value >= OptimalMin && Value <= OptimalMax)//如果环境值在最优范围内
 		{
-			return 1;
+			return 1.0F;//完全生长
 		}
-		if(Value>OptimalMin && Value<=OptimalMax)
+		else if (Value<OptimalMin)//如果环境值小于最优最小值
 		{
-			return 0.5;
+			//计算环境值value范围
+			float Range = OptimalMin - Min;
+			if (Range <= 0.0F)//
+			{
+				return 1.0F;//完全生长
+			}
+			//上面计算环境值value范围
+			//下面计算value在范围的哪个位置
+			float Alpha = (Value - Min) / Range;//滑轨值为环境值-最小值/最优最小值-最小值
+			
+			return FMath::Lerp(0.0F,1.0F,Alpha);// 环境值-最小值/ 最优最小值-最小值
 		}
+		
+		if (Value > OptimalMax)//如果环境值大于最优最大值
+		{
+			float Range =  Max -OptimalMax;
+			if (Range <= 0.0F)//
+			{
+				return 1.0F;//完全生长
+			}
+		
+		float Alpha = (Value - OptimalMax)/ Range;//滑轨值为环境值-最优最大值/最优最大值-最优最大值
+		
+		return FMath::Lerp(1.0F,0.0F,Alpha);//A是舒适区最大值 B是环境最大值 Alpha是滑轨值
+		}
+		
+		return 1.0F;//完全生长
 	}
 };
 
@@ -119,6 +147,69 @@ struct FPlantConfig: public FTableRowBase//植物配置
 	{
 		
 	}
+	//==========================
+	//========收获物配置============
+	//==========================
+	
+	//收获名称
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="植物|产量",meta=(DisplayName="收获名称"))
+	FName HarvestName;
+	
+	//基础产量
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="植物|产量",meta=(DisplayName="基础产量"))
+	float BaseHarvestAmount=10.0f;
+	
+	//收获副产物名称
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="植物|产量",meta=(DisplayName="收获副产物名称"))
+	FName ByproductName;
+	
+	//收获副产物概率
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="植物|产量",meta=(DisplayName="收获副产物概率",ClampMin="0",ClampMax="1"))
+	float ByproductChance = 0.0f;
+	
+	//收获副产物数量
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="植物|产量",meta=(DisplayName="收获副产物数量"))
+	float ByproductAmount = 1.0f;
+	
+	//====================
+	//	环境需求
+	//====================
+	//偏好土壤类型
+	UPROPERTY(EditAnywhere,Blueprintable,Category="植物|生长环境",meta=(DisplayName="偏好土壤类型"))
+	ESoilType PreferredSoilType = ESoilType::Loam;//
+	//土壤肥力范围
+	UPROPERTY(EditAnywhere,Blueprintable,Category="植物|生长环境",meta=(DisplayName="肥力范围"))
+	FPlantRange FertilityRange = FPlantRange(0.0f,10.0f,90.0f,100.0f);
+	
+	//土壤湿度范围
+	UPROPERTY(EditAnywhere,Blueprintable,Category="植物|生长环境",meta=(DisplayName="湿度范围"))
+	FPlantRange MoistureRange = FPlantRange(0.0f,0.3f,1.0f,1.0f);
+	
+	//环境温度范围
+	UPROPERTY(EditAnywhere,Blueprintable,Category="植物|生长环境",meta=(DisplayName="温度范围"))
+	FPlantRange TemperatureRange = FPlantRange(0.0f,20.0f,30.0f,40.0f);
+	
+	//环境辐射等级范围
+	UPROPERTY(EditAnywhere,Blueprintable,Category="植物|生长环境",meta=(DisplayName="辐射范围"))
+	FPlantRange RadiationRange = FPlantRange(0.0f,0.0f,0.0f,0.0f);
+	
+	//环境毒度等级范围
+	UPROPERTY(EditAnywhere,Blueprintable,Category="植物|生长环境",meta=(DisplayName="毒度等级范围"))
+	FPlantRange ToxicityRange = FPlantRange(0.0f,0.0f,0.0f,0.0f);
+		
+	//环境风速范围
+	UPROPERTY(EditAnywhere,Blueprintable,Category="植物|生长环境",meta=(DisplayName="风速范围"))
+	FPlantRange WindSpeedRange = FPlantRange(0.0F,0.0F,3.0F,3.0F);
+	
+	//环境光照强度范围
+	UPROPERTY(EditAnywhere,Blueprintable,Category="植物|生长环境",meta=(DisplayName="光照范围"))
+	FPlantRange LightIntensityRange = FPlantRange(0.3f,0.8f,1.0F,1.0F);
+	
+
+	//----------------------------------
+	//-------------植物属性配置-----------
+	//=---------------------------------
+	
 	//植物名称
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="植物", meta=(DisplayName="植物名称"))
 	FString PlantName;
@@ -146,6 +237,10 @@ struct FPlantConfig: public FTableRowBase//植物配置
 	//敏感度（敏感度会影响逆境值，比如）
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="植物|生长数据",meta=(DisplayName = "敏感度"))
 	float Sensitivity = 1.0f;
+	
+	//最大生长天数（如果超出MaxGrowthDays的时间还没有成熟，植物就会死亡）
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="植物|产量",meta=(DisplayName="最大生长天数"))
+	float MaxGrowthDays = 10.0f;
 	
 	/*//生长速度倍数 已废弃 因为生长速度倍数在生长数据中已经实现了
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="植物|生长数据",meta=(Displayname="生长速度倍数"))
@@ -180,6 +275,7 @@ enum class EGrowthStage : uint8
 	Growing UMETA(DisplayName="生长期"),
 	Flowering UMETA(DisplayName="开花期"),
 	Mature UMETA(DisplayName="成熟期"),
+	Dead UMETA(DisplayName="死亡期"),
 };
 //植物品质
 UENUM(BlueprintType)

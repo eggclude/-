@@ -7,8 +7,6 @@
 #include "UObject/ConstructorHelpers.h"
 #include "DrawDebugHelpers.h"
 
-TObjectPtr<UDataTable> UPlantBase::PlantDataTable = nullptr;// 植物配置表初始化
-
 //初始化静态变量
 int32 APIantbed::TotalCount = 0;// 种植床总数
 // Sets default values
