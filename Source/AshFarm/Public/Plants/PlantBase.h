@@ -76,11 +76,11 @@ class ASHFARM_API UPlantBase : public UObject
 	//------------------------------------------------
 	
 	//生长进度
-	UPROPERTY(EditAnywhere,Category="植物|生长数据",meta=(DisplayName = "生长进度"))
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="植物|生长数据",meta=(DisplayName = "生长进度"))
 	float GrowthProgress =0.0f;
 	
 	// 总生长时间
-	UPROPERTY(EditAnywhere,Category="植物|生长数据",meta=(DisplayName = "总生长时间"))
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="植物|生长数据",meta=(DisplayName = "总生长时间"))
 	float TotalGrowthProgress =0.0f;
 	
 	//生长阶段 
