@@ -239,8 +239,8 @@ struct FPlantConfig: public FTableRowBase//植物配置
 	float Sensitivity = 1.0f;
 	
 	//最大生长天数（如果超出MaxGrowthDays的时间还没有成熟，植物就会死亡）
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="植物|产量",meta=(DisplayName="最大生长天数"))
-	float MaxGrowthDays = 10.0f;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="植物|产量",meta=(DisplayName="最大生长时间(sec)"))
+	float MaxGrowthTime = 10.0f;
 	
 	/*//生长速度倍数 已废弃 因为生长速度倍数在生长数据中已经实现了
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="植物|生长数据",meta=(Displayname="生长速度倍数"))

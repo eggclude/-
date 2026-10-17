@@ -81,7 +81,7 @@ class ASHFARM_API UPlantBase : public UObject
 	
 	// 总生长时间
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="植物|生长数据",meta=(DisplayName = "总生长时间"))
-	float TotalGrowthProgress =0.0f;
+	float TotalGrowthTime =0.0f;
 	
 	//生长阶段 
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category="植物|生长数据",meta=(DisplayName = "生长阶段"))
@@ -99,9 +99,7 @@ class ASHFARM_API UPlantBase : public UObject
 	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="植物|生长数据",meta=(DisplayName = "是否成熟"))
 	bool bIsMature = false;
 	
-	
-	
-	
+
 #pragma endregion 植物属性
 	
 #pragma region 植物函数功能
@@ -137,6 +135,11 @@ class ASHFARM_API UPlantBase : public UObject
 	UFUNCTION(BlueprintCallable,Category="植物",meta=(DisplayName="计算收获量"))
 	virtual float CalculateHarvest() const;
 	
+	//获取生长时间文本
+	UFUNCTION(Blueprintable,Category="植物",meta=(DisplayName="获取生长时间文本"))
+	FString GetGrowthTimeText() const;
+
+	
 	#pragma endregion
 	
 	/**
@@ -165,6 +168,15 @@ class ASHFARM_API UPlantBase : public UObject
 	//当成熟时调用
 	UFUNCTION(BlueprintCallable,Category="植物",meta=(DisplayName="当成熟时"))
 	virtual void OnMature();
+	
+	//当死亡时调用
+	UFUNCTION(BlueprintCallable, Category="植物", meta=(DisplayName="当死亡时"))
+	virtual void OnDeath();
+	
+	//是否死亡
+	UFUNCTION(BlueprintCallable,Category="植物",meta=(DisplayName="是否死亡"))
+	bool IsDead() const ;//是否死亡
+	
 	virtual float EvaluateSoilQuality(EsoilQuality SoilQuality) const { return 1.0f; };//评估土壤品质
 	//PlantConfig.PreferredSoilType == SoilType ? 1.2f : 1.0f; //偏好土壤类型 1.2f 否则 1.0f ?三元表达式 如果是偏好土壤类型 则返回前面的1.2f 否则返回后面的1.0f
 	virtual float EvaluateSoilType(ESoilType SoilType) const { return PlantConfig.PreferredSoilType == SoilType ? 1.2f : 1.0f; };//评估土壤类型

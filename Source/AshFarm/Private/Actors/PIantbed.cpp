@@ -165,19 +165,25 @@ void APIantbed::Tick(float DeltaTime)
 	DrawDebugString(
 		GetWorld(), 
 		TEXTLoaction,
-		FString::Printf(TEXT("种植床ID:%d \n 土壤肥力:%.f ,土壤类型:%s，土壤品质:%s , 土壤湿度:%.f \n 当前作物:%s ,当前文本的生长阶段:%s(进度：%f)，逆境值此刻为:(%.f),品质为:%s\n"),
-		BadID,
-		SoilFertility,//土壤肥力
-		*GetSoilTypeText(),//土壤类型
-		*GetSoilQualityText(),//土壤品质
-		Moisture,//土壤湿度
-		*CurrentPlant->GetPlantName(),//当前作物
-		*CurrentPlant->GetGrowthStageText(),//当前生长阶段
-		CurrentPlant->GrowthProgress,//当前进度
-		CurrentPlant->Stress,//当前逆境值
-		*CurrentPlant->GetQualityText()),//当前品质
-		nullptr,
-		FColor::White,
+		FString::Printf(TEXT("种植床ID:%d \n" \
+				" 土壤肥力:%.f ,土壤类型:%s，土壤品质:%s , 土壤湿度:%.f \n" \
+				" 目前作物:%s ,生长进度:%s(进度：%f.%s)-%s,逆境值此刻为:(%.f),品质为:%s，\n\n" \
+				" 预计产量:%f,\n 是否死亡:"),
+			BadID,
+			SoilFertility,//土壤肥力
+			*GetSoilTypeText(),//土壤类型
+			*GetSoilQualityText(),//土壤品质
+			Moisture,//土壤湿度
+			*CurrentPlant->GetPlantName(),//当前作物
+			*CurrentPlant->GetGrowthStageText(),//当前生长阶段
+			CurrentPlant->GrowthProgress,//当前进度
+			*CurrentPlant->GetGrowthTimeText(),//当前生长时间
+			CurrentPlant->IsDead() ? TEXT("☠已死亡") : TEXT("正常"),//是否死亡
+			CurrentPlant->Stress,//当前逆境值
+			*CurrentPlant->GetQualityText(),//当前品质
+			CurrentPlant->CalculateHarvest()),//预计产量,
+		nullptr,//不绘制文本
+		CurrentPlant->IsDead() ? FColor::Red : FColor::White,//是否死亡 死亡返回红色 正常返回白色
 		0.0f
 		);   //显示时间间隔为0.5秒
 }
@@ -205,6 +211,10 @@ void APIantbed::UpdatePlantMesh()
 		{
 			PlantMesh ->SetStaticMesh(StageMesh);//设置植物网格体为当前阶段网格体
 		}
+	}
+	else
+	{
+		PlantMesh ->SetStaticMesh(nullptr);//设置植物网格体为空
 	}
 }
 //获取生长速度
@@ -393,3 +403,25 @@ void APIantbed::SetFertilityLossPerSecond(float DeltaTime)
 	
 }
 
+//清除死亡植物（玩家操作）
+void APIantbed::ClearDeadPlant()
+{
+	//todo: 实现清除死亡植物
+	if (!CurrentPlant )
+	{
+		UE_LOG(A_LogAshFarm, Warning, TEXT("种植床ID：%d,当前没有植物"), BadID);
+		return;
+	}
+	if (!CurrentPlant->IsDead())
+	{
+		UE_LOG(A_LogAshFarm, Warning, TEXT("种植床ID：%d,当前植物未死亡"), BadID);
+		return;
+	}
+	if (CurrentPlant->IsDead())
+	{
+		UE_LOG(A_LogAshFarm, Warning, TEXT("种植床ID：%d,当前植物已死亡"), BadID);
+		CurrentPlant = nullptr;
+		UpdatePlantMesh();
+	}
+		
+}

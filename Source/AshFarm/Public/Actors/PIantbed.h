@@ -153,6 +153,9 @@ public:
 	UFUNCTION(BlueprintCallable,Category="统计",meta=(DisplayName="获取所有ApiantBed实例的数量"))
 	static int32 GetTotalCount(); //
 	
+	////清除死亡植物（玩家操作）
+	UFUNCTION(BlueprintCallable, Category="种植", meta=(DisplayName="清除死亡植物"))
+	void ClearDeadPlant();
 	
 	#pragma region 土壤状态机
 	
@@ -185,7 +188,7 @@ public:
 	UPROPERTY(VisibleDefaultsOnly,BlueprintReadWrite,Category = "Mesh",meta=(DisplayName="植物网格体"))
 	TObjectPtr<UStaticMeshComponent> PlantMesh;
 	
-	
+
 #pragma region 功能函数
 	
 	

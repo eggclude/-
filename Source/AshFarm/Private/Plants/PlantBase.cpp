@@ -141,12 +141,25 @@ FString UPlantBase::GetGrowthStageText() const
 //生长
 void UPlantBase::Grow(float DeltaTime,const FPlantGrowthContext& Context)
 {
-	//没有水或者已成熟就不生长
-	if (Context.Moisture <= 0.0F || bIsMature)
+	//植物死亡则不生长
+	if (IsDead())
 	{
 		return;
 	}
+	//如果没有死亡就累计生长时间
 	TotalGrowthTime += DeltaTime;
+	if (TotalGrowthTime>=PlantConfig.MaxGrowthTime)
+	{
+		GrowthStage = EGrowthStage::Dead;//如果植物已死亡，返回死亡网格体
+		OnDeath();
+		return;
+	}
+	
+	//如果成熟就不生长
+	if (bIsMature)
+	{
+		return;
+	}
 	//综合评估倍率 
 	float EvaluatedMulti = 
 			EvaluateSoilType(Context.SoilType)				//评估土壤类型
@@ -166,10 +179,13 @@ if (EvaluatedMulti < 1.0f)
 	Stress = FMath::Clamp(Stress,0.0f,100.0f);//确保逆境值在0到100之间
 	SetPlantQuality();//设置品质
 }
-	
 	//按时间和生长速度倍数推进进度
 	GrowthProgress += PlantConfig.GrowthSpeed * EvaluatedMulti * DeltaTime;
 	GrowthProgress = FMath::Clamp(GrowthProgress,0.0f,PlantConfig.MatureProgress);//确保生长进度在0到成熟值之间
+	
+ 
+	//debug 输出当前预计产量
+	UE_LOG(A_LogAshFarm, Warning, TEXT("当前生长进度：%.2f"), CalculateHarvest());
 	//检查是否成熟
 	if (GrowthProgress >= PlantConfig.MatureProgress)
 	{
@@ -231,10 +247,22 @@ UStaticMesh* UPlantBase::GetStageMesh() const
 		return nullptr;
 	}
 }
-	
+//当成熟时调用
 void UPlantBase::OnMature()
 {
 	UE_LOG(A_LogAshFarm, Warning, TEXT("植物名称：%s，植物成熟"), *GetPlantName());
+}
+//当死亡时调用
+void UPlantBase::OnDeath()
+{
+	UE_LOG(A_LogAshFarm, Warning, TEXT("植物名称：%s，植物死亡"), *GetPlantName());
+}
+
+//确认是否死亡
+bool UPlantBase::IsDead() const
+{
+	return GrowthStage == EGrowthStage::Dead;
+	
 }
 
 
@@ -247,10 +275,12 @@ float UPlantBase::CalculateHarvest() const
 	}
 	//计算品质倍率
 	float QualityMulti = 1.0f;
-	switch (CurrentQuality)
+	switch (CurrentQuality) 
 	{
 	case EPlantQuality::Premium:
 		QualityMulti = PlantDefaults::EPlant_Quality_PREMIUM;//优质品质倍率
+		//预计产量CalculateHarvest
+		
 		break;
 	case EPlantQuality::Normal:
 		QualityMulti = PlantDefaults::EPlant_Quality_NORMAL;//普通品质倍率
@@ -265,13 +295,24 @@ float UPlantBase::CalculateHarvest() const
 	
 }
 
-//记录植物从种植到成熟的总时长
-//每次 Grow 累加 DeltaTime 到TotalGrowthTime
-float UPlantBase::GetTotalGrowthTime() const
+//获取生长时间文本
+FString UPlantBase::GetGrowthTimeText() const
 {
-	if (CurrentQuality == EPlantQuality::Premium)//优质品质
+	int32 TotSeconds = FMath::RoundToInt(TotalGrowthTime);//秒数 FloorToInt是向下取整 RoundToInt是四舍五入并舍去小数部分
+	int32 Hours = TotSeconds / 3600;//小时数
+	int32 Minutes = (TotSeconds % 3600) / 60;//分钟数
+	int32 Seconds = TotSeconds % 60 ;//秒数
+
+	if (Hours > 0)
 	{
-		return TotalGrowthTime;
+		return FString::Printf(TEXT("%d小时 %d分钟 %d秒"), Hours, Minutes, Seconds);
+	}
+	else if (Minutes > 0)
+	{
+		return FString::Printf(TEXT("%d分钟 %d秒"), Minutes, Seconds);
+	}
+	else
+	{
+		return FString::Printf(TEXT("%d秒"), Seconds);
 	}
 }
-
