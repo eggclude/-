@@ -113,13 +113,13 @@ void APIantbed::Tick(float DeltaTime)
 	SetFertilityLossPerSecond(DeltaTime);		//设置土壤肥力流失率
 	
 		//设置土壤肥力恢复速率
-    	//无辐射时，土地肥力自愈速率（每秒）
-    	if (RadiationLevel == 0)
-    	{
-    		SoilFertility += plantBedDefaults::FERTILITY_RECOVER_REC_SECOND * DeltaTime;
-    		//确保土壤肥力在最大肥力以下
-    		SoilFertility = FMath::Clamp(SoilFertility,0.0f,MaxSoilFertility);
-    	}
+		//无辐射时，土地肥力自愈速率（每秒）
+		if (RadiationLevel == 0)
+		{
+			SoilFertility += plantBedDefaults::FERTILITY_RECOVER_REC_SECOND * DeltaTime;
+			//确保土壤肥力在最大肥力以下
+			SoilFertility = FMath::Clamp(SoilFertility,0.0f,MaxSoilFertility);
+		}
 	SetMoistureLossPerSecond(DeltaTime);			//设置土壤水分流失率
 	
 	//植物生长与土壤消耗
@@ -158,34 +158,35 @@ void APIantbed::Tick(float DeltaTime)
 
 		//设置网格体
 		UpdatePlantMesh();
-	}
-	//更新土壤肥力状态
-	UpdateSoilQuality();
-	FVector TEXTLoaction= GetActorLocation()+FVector(0,0,100.0f);  //土壤肥力文本位置，FVector(0,0,1 00.0f) 表示在当前位置的上方
-	DrawDebugString(
-		GetWorld(), 
-		TEXTLoaction,
-		FString::Printf(TEXT("种植床ID:%d \n" \
+		//更新土壤肥力状态
+		UpdateSoilQuality();//放在这里面的话会避免空指针的问题
+		FVector TEXTLoaction= GetActorLocation()+FVector(0,0,100.0f);  //土壤肥力文本位置，FVector(0,0,1 00.0f) 表示在当前位置的上方
+		DrawDebugString(
+			GetWorld(), 
+			TEXTLoaction,
+			FString::Printf(TEXT("种植床ID:%d \n" \
 				" 土壤肥力:%.f ,土壤类型:%s，土壤品质:%s , 土壤湿度:%.f \n" \
 				" 目前作物:%s ,生长进度:%s(进度：%f.%s)-%s,逆境值此刻为:(%.f),品质为:%s，\n\n" \
 				" 预计产量:%f,\n 是否死亡:"),
-			BadID,
-			SoilFertility,//土壤肥力
-			*GetSoilTypeText(),//土壤类型
-			*GetSoilQualityText(),//土壤品质
-			Moisture,//土壤湿度
-			*CurrentPlant->GetPlantName(),//当前作物
-			*CurrentPlant->GetGrowthStageText(),//当前生长阶段
-			CurrentPlant->GrowthProgress,//当前进度
-			*CurrentPlant->GetGrowthTimeText(),//当前生长时间
-			CurrentPlant->IsDead() ? TEXT("☠已死亡") : TEXT("正常"),//是否死亡
-			CurrentPlant->Stress,//当前逆境值
-			*CurrentPlant->GetQualityText(),//当前品质
-			CurrentPlant->CalculateHarvest()),//预计产量,
-		nullptr,//不绘制文本
-		CurrentPlant->IsDead() ? FColor::Red : FColor::White,//是否死亡 死亡返回红色 正常返回白色
-		0.0f
-		);   //显示时间间隔为0.5秒
+				BadID,
+				SoilFertility,//土壤肥力
+				*GetSoilTypeText(),//土壤类型
+				*GetSoilQualityText(),//土壤品质
+				Moisture,//土壤湿度
+				*CurrentPlant->GetPlantName(),//当前作物
+				*CurrentPlant->GetGrowthStageText(),//当前生长阶段
+				CurrentPlant->GrowthProgress,//当前进度
+				*CurrentPlant->GetGrowthTimeText(),//当前生长时间
+				CurrentPlant->IsDead() ? TEXT("☠已死亡") : TEXT("正常"),//是否死亡
+				CurrentPlant->Stress,//当前逆境值
+				*CurrentPlant->GetQualityText(),//当前品质
+				CurrentPlant->CalculateHarvest()),//预计产量,
+			nullptr,//不绘制文本
+			CurrentPlant->IsDead() ? FColor::Red : FColor::White,//是否死亡 死亡返回红色 正常返回白色
+			0.0f//显示时间间隔为0.5秒
+			);
+	}
+	   
 }
 
 //结束播放事件
@@ -424,4 +425,51 @@ void APIantbed::ClearDeadPlant()
 		UpdatePlantMesh();
 	}
 		
+}
+//收货植物
+void APIantbed::Harvest()
+{
+	if (!CurrentPlant)
+	{
+		UE_LOG(A_LogAshFarm,Warning,TEXT("种植床id:%d 没有植物"),BadID);
+		return;
+	}
+	if (CurrentPlant->IsDead())
+	{
+		UE_LOG(A_LogAshFarm,Warning,TEXT("种植床id:%d 当前的植物为死亡状态"),BadID); 
+		return;
+	}
+	//如果没有成熟
+	if (CurrentPlant->IsMature( ))
+	{
+		UE_LOG(A_LogAshFarm,Warning,TEXT("种植床id:%d 当前的植物不为成熟状态"),BadID); 
+		return;
+	}
+	
+	UE_LOG(A_LogAshFarm,Warning,TEXT("种植床id:%d 当前的植物为成熟状态"),BadID)
+	
+	FString PlantName = CurrentPlant->GetName();
+	FString HarvestName = CurrentPlant->PlantConfig.HarvestName.ToString();
+	FString PlantQuality = CurrentPlant->GetQualityText();
+	float HarvestAmount = CurrentPlant->CalculateHarvest();//
+	
+	
+	//计算副产品数量
+	FString ByproductName = CurrentPlant->PlantConfig.ByproductName.ToString();
+	float  ByproductAmount = 0.0f;
+	float  ByproductChance = CurrentPlant->PlantConfig.ByproductChance;
+	
+	//FMath::FRand()产生一个0-1的随机数
+	if (FMath::FRand() < ByproductChance)
+	{
+		HarvestAmount += ByproductAmount;
+	}
+	UE_LOG(A_LogAshFarm,Warning,
+		TEXT("种植床id:%d 收货成熟植物，植物名称：%s,品质质量：%s，收获量：%f,副产品名称；%S,副产品数量；%f")
+		,BadID,
+		*PlantName,
+		*PlantQuality,
+		HarvestAmount,
+		*ByproductName,
+		ByproductAmount); 
 }
