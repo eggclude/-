@@ -71,8 +71,8 @@ public:
 	// const 加入后变为常量无法变更
 	
 	
-	//土壤温度
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="土壤",meta=(Displayname="土壤温度"))
+	//土壤湿度
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="土壤",meta=(DisplayName="土壤湿度"))
 	float Moisture = 0.1f;
 	
 	//获取最大土壤水分含量
@@ -153,9 +153,14 @@ public:
 	UFUNCTION(BlueprintCallable,Category="统计",meta=(DisplayName="获取所有ApiantBed实例的数量"))
 	static int32 GetTotalCount(); //
 	
-	////清除死亡植物（玩家操作）
+	//清除死亡植物（玩家操作）
 	UFUNCTION(BlueprintCallable, Category="种植", meta=(DisplayName="清除死亡植物"))
 	void ClearDeadPlant();
+	
+	//收获植物
+	UFUNCTION(BlueprintCallable, Category="种植", meta=(DisplayName="收货植物"))
+	void Harvest();
+
 	
 	#pragma region 土壤状态机
 	
@@ -166,8 +171,8 @@ public:
 	
 	//组件不需要ue
 	//protected 保护，下面的函数和变量可以在本类内部和子类调用，其他类不能调用
-	protected:
-	//组件TObjectPtr
+protected:
+//组件TObjectPtr
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category = "Root")
 	TObjectPtr<USceneComponent>  Root; 
 	//静态网格体组件
@@ -187,8 +192,8 @@ public:
 	//静态网格体组件
 	UPROPERTY(VisibleDefaultsOnly,BlueprintReadWrite,Category = "Mesh",meta=(DisplayName="植物网格体"))
 	TObjectPtr<UStaticMeshComponent> PlantMesh;
-	
 
+	
 #pragma region 功能函数
 	
 	

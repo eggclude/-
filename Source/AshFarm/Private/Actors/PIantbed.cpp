@@ -426,21 +426,23 @@ void APIantbed::ClearDeadPlant()
 	}
 		
 }
-//收货植物
+//收获植物
 void APIantbed::Harvest()
 {
-	if (!CurrentPlant)
+	
+	if (!CurrentPlant)//情况1：当前没有植物
 	{
 		UE_LOG(A_LogAshFarm,Warning,TEXT("种植床id:%d 没有植物"),BadID);
 		return;
 	}
-	if (CurrentPlant->IsDead())
+	if (CurrentPlant->IsDead())//情况2：当前植物为死亡状态
 	{
 		UE_LOG(A_LogAshFarm,Warning,TEXT("种植床id:%d 当前的植物为死亡状态"),BadID); 
 		return;
 	}
 	//如果没有成熟
-	if (CurrentPlant->IsMature( ))
+	//
+	if (!CurrentPlant->IsMature())//情况3：当前植物不为成熟状态
 	{
 		UE_LOG(A_LogAshFarm,Warning,TEXT("种植床id:%d 当前的植物不为成熟状态"),BadID); 
 		return;
@@ -448,16 +450,15 @@ void APIantbed::Harvest()
 	
 	UE_LOG(A_LogAshFarm,Warning,TEXT("种植床id:%d 当前的植物为成熟状态"),BadID)
 	
-	FString PlantName = CurrentPlant->GetName();
-	FString HarvestName = CurrentPlant->PlantConfig.HarvestName.ToString();
-	FString PlantQuality = CurrentPlant->GetQualityText();
-	float HarvestAmount = CurrentPlant->CalculateHarvest();//
-	
+	FString PlantName = CurrentPlant->GetName(); //获取植物名称
+	FString HarvestName = CurrentPlant->PlantConfig.HarvestName.ToString(); //获取收获名称 ToString()将FName转换为FString
+	FString PlantQuality = CurrentPlant->GetQualityText(); //获取品质质量
+	float HarvestAmount = CurrentPlant->CalculateHarvest(); //计算收获量
 	
 	//计算副产品数量
-	FString ByproductName = CurrentPlant->PlantConfig.ByproductName.ToString();
-	float  ByproductAmount = 0.0f;
-	float  ByproductChance = CurrentPlant->PlantConfig.ByproductChance;
+	FString ByproductName = CurrentPlant->PlantConfig.ByproductName.ToString(); //获取副产品名称
+	float  ByproductAmount = 0.0f; //副产品数量
+	float  ByproductChance = CurrentPlant->PlantConfig.ByproductChance; //副产品副产品概率
 	
 	//FMath::FRand()产生一个0-1的随机数
 	if (FMath::FRand() < ByproductChance)
@@ -465,11 +466,15 @@ void APIantbed::Harvest()
 		HarvestAmount += ByproductAmount;
 	}
 	UE_LOG(A_LogAshFarm,Warning,
-		TEXT("种植床id:%d 收货成熟植物，植物名称：%s,品质质量：%s，收获量：%f,副产品名称；%S,副产品数量；%f")
+		TEXT("种植床id:%d 收获成熟植物,植物名称：%s,收获名称：%s,品质质量：%s,收获量：%f,副产品名称:%s,副产品数量：%f")
 		,BadID,
 		*PlantName,
+		*HarvestName,
 		*PlantQuality,
 		HarvestAmount,
 		*ByproductName,
 		ByproductAmount); 
+	
+	CurrentPlant = nullptr;//上面收获后,清除当前植物
+	UpdatePlantMesh();//更新植物网格体
 }

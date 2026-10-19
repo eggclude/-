@@ -169,6 +169,10 @@ class ASHFARM_API UPlantBase : public UObject
 	UFUNCTION(BlueprintCallable,Category="植物",meta=(DisplayName="当成熟时"))
 	virtual void OnMature();
 	
+	//是否成熟
+	UFUNCTION(BlueprintCallable,Category="植物",meta=(DisplayName="是否成熟"))
+	bool IsMature() const { return bIsMature; };//是否成熟
+	
 	//当死亡时调用
 	UFUNCTION(BlueprintCallable, Category="植物", meta=(DisplayName="当死亡时"))
 	virtual void OnDeath();

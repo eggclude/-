@@ -1,10 +1,10 @@
 ﻿#pragma once
 
 #include "CoreMinimal.h"
-#include "Engine/DataTable.h"          
-#include "UObject/SoftObjectPtr.h"    
 #include "Actors/PlantBedTypes.h" 
 #include "PlantTypes.generated.h"
+
+
 namespace PlantDefaults
 {
 	//植物品质阈值
@@ -37,7 +37,7 @@ struct FPlantGrowthContext//FPlantGrowth植物生长环境 上下文(context)/�
 	RadiationLevel(0),
 	Toxicity(0.0f),
 	WindSpeed(0.0f),
-	LightIntensity(0.0f)
+	LightIntensity(0.5f)
 	{
 		
 	}

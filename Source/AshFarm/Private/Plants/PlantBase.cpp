@@ -146,6 +146,13 @@ void UPlantBase::Grow(float DeltaTime,const FPlantGrowthContext& Context)
 	{
 		return;
 	}
+	
+	//如果成熟就不生长
+	if (bIsMature)
+	{
+		return;
+	}
+	
 	//如果没有死亡就累计生长时间
 	TotalGrowthTime += DeltaTime;
 	if (TotalGrowthTime>=PlantConfig.MaxGrowthTime)
@@ -155,11 +162,6 @@ void UPlantBase::Grow(float DeltaTime,const FPlantGrowthContext& Context)
 		return;
 	}
 	
-	//如果成熟就不生长
-	if (bIsMature)
-	{
-		return;
-	}
 	//综合评估倍率 
 	float EvaluatedMulti = 
 			EvaluateSoilType(Context.SoilType)				//评估土壤类型
@@ -182,10 +184,10 @@ if (EvaluatedMulti < 1.0f)
 	//按时间和生长速度倍数推进进度
 	GrowthProgress += PlantConfig.GrowthSpeed * EvaluatedMulti * DeltaTime;
 	GrowthProgress = FMath::Clamp(GrowthProgress,0.0f,PlantConfig.MatureProgress);//确保生长进度在0到成熟值之间
-	
+	SetGrowthStage();      //设置生长阶段
  
 	//debug 输出当前预计产量
-	UE_LOG(A_LogAshFarm, Warning, TEXT("当前生长进度：%.2f"), CalculateHarvest());
+	//UE_LOG(A_LogAshFarm, Warning, TEXT("当前生长进度：%.2f"), CalculateHarvest());
 	//检查是否成熟
 	if (GrowthProgress >= PlantConfig.MatureProgress)
 	{
