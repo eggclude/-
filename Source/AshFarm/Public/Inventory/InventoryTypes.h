@@ -7,7 +7,7 @@
 
 
 UENUM(BlueprintType)//资源类型枚举
-enum class EResourcesType : uint8 
+enum class EResourcesType : uint8 //EResourcesType 他是资源仓库映射key
 {
 	//资源类型
 	Water UMETA(DisplayName="水"),
@@ -19,6 +19,7 @@ enum class EResourcesType : uint8
 	Tool UMETA(DisplayName="工具"),
 	Plant UMETA(DisplayName="种子"),
 };
+//资源配置
 USTRUCT(BlueprintType)//资源配置结构体
 struct FResourceConfig
 {

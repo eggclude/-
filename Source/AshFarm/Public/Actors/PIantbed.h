@@ -35,21 +35,6 @@ public:
 	//析构函数
 	~APIantbed();
 	
-	//Bad id
-	UPROPERTY(EditInstanceOnly,BlueprintReadWrite,Category="种植床",meta=(DisplayName="种植床ID"))
-	int32 BadID = 0; // 无效的种植床ID
-	
-	//Uint8 : 无符号8位整数
-	//int16 : 16位整数
-	//int32 : 32位整数
-	//float ：浮点型数（小数）
-	//土壤肥力
-	//UPROPERTY() : 属性，告诉UE下面的变量，这个变量要注册进反射系统，可以在蓝图中访问
-	//BlueprintReadWrite ： 可读可编辑
-	//Category : 词条变体名称
-	//meta=DisplayName : meta是属性名称 DisplayName是表述 因为ue只识别英文属性名
-	//const : 常量，不能被修改 
-	//目前种植的作物类型
  	UPROPERTY(EditAnywhere,Instanced,BlueprintReadWrite,Category="种植",meta=(DisplayName="种植作物类型"))
 	TObjectPtr<UPlantBase> CurrentPlant;
 	
