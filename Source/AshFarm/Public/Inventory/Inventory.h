@@ -7,6 +7,7 @@
 #include "Components/BoxComponent.h"
 #include "Inventory/InventoryTypes.h"
 #include "Plants/PlantBase.h"
+#include "DrawDebugHelpers.h"
 #include "Inventory.generated.h"
 
 UCLASS(Blueprintable,ClassGroup="AshFarm | 库存系统")
@@ -54,6 +55,33 @@ public:
 	UFUNCTION(BlueprintCallable,Category="仓库",meta=(DisplayName="获取资源类型文本"))
 	FString GetResourceTypeText(EResourcesType Type) const;
 	
+	//打印字符串
+	UFUNCTION(BlueprintCallable,Category="仓库",meta=(DisplayName="打印字符串"))
+	void PrintResourceInventory();
+	
+	//批量添加资源
+	UFUNCTION(BlueprintCallable,Category="仓库",meta=(DisplayName="批量添加资源"))
+	void  AddMultipleResources(const TArray<FResourceBundle>& Bundles);
+	
+	//查看容量上限
+	UFUNCTION(BlueprintCallable,Category="仓库",meta=(DisplayName="查看容量上限"))
+	int32 GetResourceCapacity(EResourcesType Type) const;
+	
+	//--------------------------------------------------
+	//======解锁种子类型相关======//
+	//--------------------------------------------------
+	
+	//解锁种子类型
+	UFUNCTION(BlueprintCallable,Category="仓库",meta=(DisplayName="解锁种子类型"))
+	void UnlockPlantType(TSubclassOf<UPlantBase>PlantType);//UPlantBase 是类的本身 只是解锁其中一个种子类型 所有的Tset集合
+	
+	//获取已解锁的种子类型
+	UFUNCTION(BlueprintCallable,Category="仓库",meta=(DisplayName="获取已解锁的种子类型"))
+	TArray<TSubclassOf<UPlantBase>> GetUnlockedPlantTypes(); //数组后续是一个指针类指向UPlantBase的子类
+	
+	//检查函数是否已解锁
+	UFUNCTION(BlueprintCallable,Category="仓库",meta=(DisplayName="检查函数是否已解锁"))
+	bool IsPlantTypeUnlocked(TSubclassOf<UPlantBase>PlantType) const;
 protected:
 	virtual void BeginPlay() override;
 	//组件TObjectPtr
@@ -69,8 +97,10 @@ protected:
 	UPROPERTY(VisibleDefaultsOnly,BlueprintReadOnly,Category = "Box")
 	TObjectPtr<UBoxComponent> CollisionBox;
 
+	
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+	
 	
 };

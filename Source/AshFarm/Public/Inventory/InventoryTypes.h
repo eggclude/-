@@ -41,6 +41,17 @@ public:
 	
 	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="资源配置",meta=(DisplayName="图标"))
 	TSoftObjectPtr<UTexture2D> Icon;
+};
+//资源包结构体
+USTRUCT(BlueprintType)
+struct FResourceBundle//资源包结构体
+{
+	GENERATED_BODY()//自动生成构造函数
 	
+public:
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category = "资源包",meta=(DisplayName="资源类型"))
+	EResourcesType Type;
 	
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category = "资源包",meta=(DisplayName="资源数量",ClampMin="0"))
+	int32 Count;
 };

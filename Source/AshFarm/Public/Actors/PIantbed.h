@@ -80,6 +80,11 @@ public:
 	UFUNCTION(BlueprintCallable,Category="土壤",meta=(DisplayName = "获取土壤肥力"))
 	float GetSoilFertility() const;
 	
+	
+	//获取种植床ID
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="种植",meta=(DisplayName="种植床ID"))
+	int32 BadID;
+	
 	//设置 土壤肥力
 	UFUNCTION(BlueprintCallable,Category="土壤",meta=(DisplayName = "设置土壤肥力"))
 	//void 没有返回如何值
