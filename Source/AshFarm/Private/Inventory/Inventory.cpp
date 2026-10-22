@@ -3,6 +3,7 @@
 
 #include "Inventory/Inventory.h"
 #include "AshFarm.h"	
+#include "AudioMixerBlueprintLibrary.h"
 
 
 // Sets default values
@@ -245,32 +246,25 @@ void AInventory::UnlockPlantType(TSubclassOf<UPlantBase>PlantType)
 	}
 
 	//已经解锁过 → 不重复添加，直接返回
-	if (PlantResources.Contains(PlantType))
+	if (!UnlockedPlantTypes.Contains(PlantType))
 	{
-		UE_LOG(A_LogAshFarm, Warning, TEXT("该种子类型已解锁：%s"), *PlantType->GetName());
-		return;
+		UnlockedPlantTypes.Add(PlantType);//如果未解锁过 就加入集合
+		UE_LOG(A_LogAshFarm, Warning, TEXT("种子类型%s 已解锁"), *PlantType->GetName());// *PlantType->GetName()拿到的是类的名字
+		
 	}
-
-	//首次解锁 → 加入集合并打日志
-	PlantResources.Add(PlantType);
-	UE_LOG(A_LogAshFarm, Warning, TEXT("解锁种子类型成功：%s"), *PlantType->GetName());
+}
+//检查函数是否已解锁
+bool AInventory::IsPlantTypeUnlocked(TSubclassOf<UPlantBase>PlantType) const
+{
+	return UnlockedPlantTypes.Contains(PlantType);
 }
 
 //获取已解锁的种子类型
-TArray<TSubclassOf<UPlantBase>> AInventory::GetUnlockedPlantTypes()
+TSet<TSubclassOf<UPlantBase>> AInventory::GetUnlockedPlantTypes()
 {
 	//TSet 转成 TArray 返回（蓝图里更好遍历）
-	return PlantResources.Array();
+	return UnlockedPlantTypes;
 }
-
-bool AInventory::IsPlantTypeUnlocked(TSubclassOf<UPlantBase>PlantType) const
-{
-	return PlantResources.Contains(PlantType);
-}
-
-
-
-
 
 
 //查看容量上限
@@ -292,4 +286,43 @@ int32 AInventory::GetResourceCapacity(EResourcesType Type) const
 		//- 返回 MaxCapacity。
 		return  Config->MaxCapacity;
 }
-
+//排序
+TArray<TPair<EResourcesType, int32>> AInventory::GetSortedInventory(EInventorySortType SortType) const
+{
+	//先将资源库存转换为TArray<TPair<EResourcesType, int32>>数组
+	TArray<TPair<EResourcesType, int32>> SortedInventory;
+	//遍历资源库存 将每个元素加入到SortedInventory数组中
+	for (const auto& Pair : ResourcesInventory)
+	{
+		SortedInventory.Add(Pair);
+	}
+	switch (SortType)
+	{
+		//按资源数量升序排序
+		case EInventorySortType::CountAscending:
+			SortedInventory.Sort(
+				//const TPair<EResourcesType,int32>&A 是SortedInventory数组中的一个元素 它的类型是EResourcesType和int32的对
+				//const TPair<EResourcesType,int32>&B 是SortedInventory数组中的一个元素 它的类型是EResourcesType和int32的对
+			[](const TPair<EResourcesType,int32>&A, const TPair<EResourcesType,int32>&B	)
+			{
+				return A.Value < B.Value;
+			}
+		);
+			break;
+		//按资源数量降序排序
+		case EInventorySortType::CountDescending:
+			SortedInventory.Sort();
+			break;
+		//按资源类型升序排序
+		case EInventorySortType::TypeAscending:
+			SortedInventory.Sort();
+			break;
+		//按资源类型降序排序
+		case EInventorySortType::TypeDescending:
+			SortedInventory.Sort();
+			break;
+		
+		default:
+			break;
+	}
+}

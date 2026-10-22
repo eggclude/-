@@ -29,7 +29,7 @@ public:
 	
 	//TSet集合 种子资源集合 已经解锁的种子类型   无序、键唯一、键查找快
 	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="仓库",meta=(DisplayName="种子资源集合"))
-	TSet<TSubclassOf<UPlantBase>> PlantResources;//TSubclassOf
+	TSet<TSubclassOf<UPlantBase>> UnlockedPlantTypes;//TSubclassOf
 	//UPlantBase之前用的都是TObjectPtr的对象指针  是一个实实在在的对象  TSubclassOf是一个指针类
 	
 	//--------------------------------------------------
@@ -77,11 +77,26 @@ public:
 	
 	//获取已解锁的种子类型
 	UFUNCTION(BlueprintCallable,Category="仓库",meta=(DisplayName="获取已解锁的种子类型"))
-	TArray<TSubclassOf<UPlantBase>> GetUnlockedPlantTypes(); //数组后续是一个指针类指向UPlantBase的子类
+	TSet<TSubclassOf<UPlantBase>> GetUnlockedPlantTypes(); //数组后续是一个指针类指向UPlantBase的子类
 	
 	//检查函数是否已解锁
 	UFUNCTION(BlueprintCallable,Category="仓库",meta=(DisplayName="检查函数是否已解锁"))
 	bool IsPlantTypeUnlocked(TSubclassOf<UPlantBase>PlantType) const;
+	
+	//--------------------------------------------------
+	//======数据统计 排序======//
+	//--------------------------------------------------
+	
+	//排序
+	UFUNCTION(BlueprintCallable,Category="仓库",meta=(DisplayName="排序资源库存"))
+	TArray<TPair<EResourcesType, int32>> GetSortedInventory(EInventorySortType SortType) const;
+	
+	
+	
+	//获取种子类型的显示文本
+	UFUNCTION(BlueprintCallable,Category="仓库",meta=(DisplayName="获取种子类型文本"))
+	FString GetPlantTypeText(TSubclassOf<UPlantBase>PlantType) const;
+	
 protected:
 	virtual void BeginPlay() override;
 	//组件TObjectPtr

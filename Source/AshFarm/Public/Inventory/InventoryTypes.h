@@ -19,6 +19,18 @@ enum class EResourcesType : uint8 //EResourcesType 他是资源仓库映射key
 	Tool UMETA(DisplayName="工具"),
 	Plant UMETA(DisplayName="种子"),
 };
+//排序类型
+enum class EInventorySortType : uint8
+{
+	//按资源类型排序
+	TypeAscending,//按资源类型升序排序
+	TypeDescending,//按资源类型降序排序
+	CountAscending,//按资源数量升序排序
+	CountDescending,//按资源数量降序排序
+	MaxCapacity,
+};
+
+
 //资源配置
 USTRUCT(BlueprintType)//资源配置结构体
 struct FResourceConfig
